@@ -709,6 +709,15 @@
         "Fentes en déficit (pied avant surélevé)",
         "Fentes en déficit sautées",
         "Shrimp squats"
+      ]},
+    { id:"dips", name:"Dips", group:'pectoraux', enabled:true, level:1, pv:PROGRESSION_VERSION,
+      targetMin:10, targetMax:18, target:10, perLeg:false,
+      variants:[
+        "Dips stricts complets",
+        "Dips lestés (charge légère)",
+        "Dips lestés (charge modérée)",
+        "Dips lestés (charge lourde)",
+        "Dips lestés + tempo lent (3–4s excentrique)"
       ]}
   ];
 
@@ -819,6 +828,12 @@
         ex.level = clampLevel(ex.level);
         if(typeof ex.target === 'number'){
           ex.target = Math.max(ex.targetMin, Math.min(ex.targetMax, ex.target));
+        }
+      });
+      // Seed newly-added default exercises (e.g. Dips) into an existing library
+      DEFAULT_EXERCISES.forEach(def => {
+        if(!exercises.some(ex => ex.id === def.id)){
+          exercises.push(JSON.parse(JSON.stringify(def)));
         }
       });
       saveExercises();
