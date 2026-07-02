@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Full Body — Suivi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#15141a;
+    --surface:#1e1d24;
+    --surface-2:#26252e;
+    --surface-3:#302f39;
+    --text:#f3f0ea;
+    --text-dim:#8b8894;
+    --text-faint:#5c5a66;
+    --accent:#e3b23c;
+    --accent-dim:#8a6f27;
+    --teal:#4a9b8e;
+    --danger:#b84a3e;
+    --line:#34333d;
+    --safe-top:env(safe-area-inset-top, 0px);
+    --safe-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;background:var(--bg);overscroll-behavior:none;}
+  body{
+    font-family:'Inter',sans-serif;
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:520px;
+    min-height:100vh;
+    padding-top:calc(var(--safe-top) + 14px);
+    padding-bottom:calc(var(--safe-bottom) + 90px);
+    position:relative;
+  }
+  .display{font-family:'Oswald',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  header{
+    padding:0 20px 16px 20px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:18px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-size:30px;
+    font-weight:600;
+    letter-spacing:0.01em;
+    margin:0 0 4px 0;
+    text-transform:uppercase;
+  }
+  .subline{color:var(--text-dim); font-size:13px;}
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    padding:0 20px;
+    margin-bottom:18px;
+  }
+  .tab-btn{
+    flex:1;
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    padding:10px 0;
+    border-radius:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+  }
+  .tab-btn.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#1a1610;
+    font-weight:600;
+  }
+
+  main{padding:0 20px;}
+
+  .round-tracker{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    margin-bottom:16px;
+  }
+  .round-label{font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em; font-family:'IBM Plex Mono',monospace;}
+  .round-pips{display:flex; gap:8px; margin-top:6px;}
+  .pip{
+    width:26px;height:26px;border-radius:50%;
+    border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;color:var(--text-faint);
+  }
+  .pip.done{background:var(--teal); border-color:var(--teal); color:#0d1f1c; font-weight:600;}
+  .pip.current{border-color:var(--accent); color:var(--accent);}
+
+  .exercise{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:12px;
+    transition:border-color .2s;
+  }
+  .exercise.completed{border-color:var(--teal);}
+  .ex-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .ex-num{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--text-faint);
+    font-size:12px;
+    margin-bottom:2px;
+  }
+  .ex-name{
+    font-family:'Oswald',sans-serif;
+    font-size:19px;
+    font-weight:500;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+  }
+  .ex-target{color:var(--text-dim); font-size:12.5px; margin-top:2px;}
+  .ex-variant{
+    color:var(--accent);
+    font-size:13px;
+    margin-top:4px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .lvl-badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    font-weight:600;
+    background:var(--accent-dim);
+    color:var(--text);
+    border-radius:5px;
+    padding:2px 5px;
+    letter-spacing:0.04em;
+  }
+  /* Level selector in settings */
+  .ex-level-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 0 12px 50px;
+    border-bottom:1px solid var(--line);
+  }
+  .ex-level-row.hidden-row{display:none;}
+  .lvl-pips{display:flex; gap:6px;}
+  .lvl-pip{
+    width:30px;height:30px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--text-faint);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    padding:0;
+  }
+  .lvl-pip.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#1a1610;
+    font-weight:600;
+  }
+  .lvl-variant-name{
+    flex:1;
+    font-size:12px;
+    color:var(--accent);
+    min-width:0;
+  }
+  .ex-check{
+    width:34px;height:34px;min-width:34px;
+    border-radius:50%;
+    border:2px solid var(--line);
+    background:none;
+    color:var(--text-faint);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+  }
+  .exercise.completed .ex-check{
+    background:var(--teal); border-color:var(--teal); color:#0d1f1c;
+  }
+  .ex-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:14px;
+  }
+  .reps-input{
+    flex:1;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:18px;
+    text-align:center;
+    padding:10px 0;
+    -moz-appearance:textfield;
+  }
+  .reps-input::-webkit-outer-spin-button,
+  .reps-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .reps-input:focus{outline:none; border-color:var(--accent);}
+  .stepper{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .stepper button{
+    width:34px;height:26px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    border-radius:6px;
+    font-size:13px;
+  }
+  .validate-btn{
+    width:100%;
+    margin-top:12px;
+    padding:11px 0;
+    border-radius:10px;
+    border:none;
+    background:var(--surface-3);
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+  }
+  .exercise.completed .validate-btn{
+    background:var(--accent);
+    color:#1a1610;
+    font-weight:600;
+  }
+
+  .finish-btn{
+    width:100%;
+    padding:16px 0;
+    margin-top:8px;
+    border-radius:12px;
+    border:1px solid var(--accent);
+    background:transparent;
+    color:var(--accent);
+    font-family:'Oswald',sans-serif;
+    font-size:16px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+  }
+  .finish-btn.ready{
+    background:var(--accent);
+    color:#1a1610;
+    font-weight:600;
+  }
+  .finish-btn.subtle{
+    border-color:var(--line);
+    color:var(--text-dim);
+    font-size:14px;
+    padding:12px 0;
+  }
+
+  .rest-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(21,20,26,0.97);
+    backdrop-filter:blur(6px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s;
+    padding:20px;
+  }
+  .rest-overlay.show{opacity:1; pointer-events:auto;}
+  .rest-label{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--accent);
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    font-size:12px;
+    margin-bottom:6px;
+  }
+  .rest-next{color:var(--text-dim); font-size:14px; margin-bottom:28px; text-align:center;}
+  .timer-wrap{position:relative; width:min(72vw,280px); height:min(72vw,280px);}
+  .timer-wrap svg{width:100%; height:100%; transform:rotate(-90deg);}
+  .timer-track{fill:none; stroke:var(--line); stroke-width:8;}
+  .timer-fill{fill:none; stroke:var(--accent); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 1s linear;}
+  .timer-center{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .timer-num{font-family:'IBM Plex Mono',monospace; font-size:56px; font-weight:600; color:var(--text);}
+  .timer-sub{color:var(--text-faint); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; margin-top:4px;}
+  .rest-controls{
+    display:flex;
+    gap:12px;
+    margin-top:32px;
+  }
+  .rest-controls button{
+    padding:12px 18px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+  }
+  .rest-skip{
+    margin-top:18px;
+    background:none; border:none;
+    color:var(--text-dim);
+    font-size:13px;
+    text-decoration:underline;
+  }
+
+  .hist-session{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:12px;
+  }
+  .hist-date{font-family:'Oswald',sans-serif; font-size:17px; text-transform:uppercase;}
+  .hist-meta{color:var(--text-dim); font-size:12.5px; margin-top:2px; margin-bottom:10px;}
+  .hist-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 14px;}
+  .hist-ex{display:flex; justify-content:space-between; font-size:12.5px; color:var(--text-dim); border-bottom:1px dashed var(--line); padding-bottom:4px;}
+  .hist-ex b{color:var(--text); font-weight:500;}
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--text-faint);
+  }
+  .empty-state .ico{font-size:36px; margin-bottom:12px; opacity:0.5;}
+
+  .settings-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .settings-title{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin-bottom:8px;
+  }
+  .settings-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .settings-row:last-child{border-bottom:none;}
+  .settings-row span{font-size:13.5px; color:var(--text-dim);}
+  .settings-stepper{display:flex; align-items:center; gap:10px;}
+  .settings-stepper button{
+    width:28px;height:28px;border-radius:6px;
+    background:var(--surface-2); border:1px solid var(--line); color:var(--text);
+  }
+  .settings-stepper .val{font-family:'IBM Plex Mono',monospace; min-width:40px; text-align:center; font-size:14px;}
+
+  /* Exercise editor */
+  .ex-edit-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .ex-edit-row:last-child{border-bottom:none;}
+  .ex-edit-row.off .ex-edit-name{color:var(--text-faint); text-decoration:line-through;}
+  .ex-toggle{
+    width:40px;height:24px;min-width:40px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    position:relative;
+    padding:0;
+  }
+  .ex-toggle::after{
+    content:'';
+    position:absolute;
+    top:2px; left:2px;
+    width:18px;height:18px;
+    border-radius:50%;
+    background:var(--text-faint);
+    transition:left .15s, background .15s;
+  }
+  .ex-toggle.on{background:var(--accent-dim); border-color:var(--accent);}
+  .ex-toggle.on::after{left:18px; background:var(--accent);}
+  .ex-edit-main{flex:1; min-width:0;}
+  .ex-edit-name{font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .ex-edit-target{font-size:11.5px; color:var(--text-faint);}
+  .ex-edit-actions{display:flex; gap:6px;}
+  .ex-edit-actions button{
+    width:28px;height:28px;
+    border-radius:6px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-size:12px;
+  }
+  .ex-edit-actions button.del{color:var(--danger); border-color:rgba(184,74,62,0.4);}
+  .ex-edit-actions button:disabled{opacity:0.3;}
+
+  .add-ex-form{
+    margin-top:12px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .add-ex-form input{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:10px 12px;
+  }
+  .add-ex-form input:focus{outline:none; border-color:var(--accent);}
+  .add-ex-form input::placeholder{color:var(--text-faint);}
+  .add-ex-btn{
+    padding:10px 0;
+    border-radius:8px;
+    border:1px dashed var(--accent-dim);
+    background:none;
+    color:var(--accent);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+  }
+  .apply-note{
+    font-size:12px;
+    color:var(--text-faint);
+    margin-top:10px;
+    line-height:1.5;
+  }
+
+  /* Tracking */
+  .track-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:12px;
+  }
+  .track-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:4px;
+  }
+  .track-name{
+    font-family:'Oswald',sans-serif;
+    font-size:18px;
+    font-weight:500;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+  }
+  .track-delta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    font-weight:600;
+  }
+  .track-delta.up{color:var(--teal);}
+  .track-delta.down{color:var(--danger);}
+  .track-delta.flat{color:var(--text-faint);}
+  .track-stats{
+    display:flex;
+    gap:18px;
+    margin-bottom:12px;
+  }
+  .track-stat{font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em;}
+  .track-stat b{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:16px;
+    font-weight:600;
+    color:var(--text);
+    text-transform:none;
+    letter-spacing:0;
+    margin-top:2px;
+  }
+  .track-chart{width:100%; height:auto; display:block;}
+  .track-chart .grid-line{stroke:var(--line); stroke-width:1; stroke-dasharray:2 4;}
+  .track-chart .bar{fill:var(--surface-3);}
+  .track-chart .bar.last{fill:var(--accent);}
+  .track-chart .spark{fill:none; stroke:var(--teal); stroke-width:2; stroke-linejoin:round; stroke-linecap:round;}
+  .track-chart .dot{fill:var(--teal);}
+  .track-chart .dot.last{fill:var(--accent); stroke:var(--bg); stroke-width:2;}
+  .track-chart .axis-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:9px;
+    fill:var(--text-faint);
+  }
+  .track-chart .val-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    fill:var(--text-dim);
+    text-anchor:middle;
+  }
+  .track-chart .val-label.last{fill:var(--accent); font-weight:600;}
+  .track-note{
+    font-size:11.5px;
+    color:var(--text-faint);
+    margin-top:8px;
+  }
+
+  .group-header{
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--accent);
+    margin:14px 0 4px 0;
+    padding-bottom:5px;
+    border-bottom:1px solid var(--accent-dim);
+  }
+  .group-header:first-of-type{margin-top:4px;}
+  .group-select{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    padding:10px 12px;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  .group-select:focus{outline:none; border-color:var(--accent);}
+
+  .toast{
+    position:fixed;
+    bottom:calc(var(--safe-bottom) + 20px);
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--surface-3);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:10px 18px;
+    border-radius:10px;
+    font-size:13px;
+    opacity:0;
+    transition:opacity .3s, transform .3s;
+    z-index:60;
+    pointer-events:none;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="eyebrow" id="dateLine">—</div>
+    <h1>Full Body</h1>
+    <div class="subline">Circuit poids du corps · barre de traction</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="seance">Séance</button>
+    <button class="tab-btn" data-tab="tracking">Tracking</button>
+    <button class="tab-btn" data-tab="historique">Journal</button>
+    <button class="tab-btn" data-tab="reglages">Réglages</button>
+  </div>
+
+  <main id="main"></main>
+</div>
+
+<div class="rest-overlay" id="restOverlay">
+  <div class="rest-label">Repos</div>
+  <div class="rest-next" id="restNext">Prochain : —</div>
+  <div class="timer-wrap">
+    <svg viewBox="0 0 100 100">
+      <circle class="timer-track" cx="50" cy="50" r="45"></circle>
+      <circle class="timer-fill" id="timerFill" cx="50" cy="50" r="45"
+        stroke-dasharray="282.7" stroke-dashoffset="0"></circle>
+    </svg>
+    <div class="timer-center">
+      <div class="timer-num" id="timerNum">1:15</div>
+      <div class="timer-sub">restant</div>
+    </div>
+  </div>
+  <div class="rest-controls">
+    <button id="restMinus">−15s</button>
+    <button id="restPlus">+15s</button>
+  </div>
+  <button class="rest-skip" id="restSkip">Passer le repos</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Default exercise library ----------
+  // Each exercise has 5 progression variants; `level` (1–5) selects the active one.
+  // Progression v2: recalibrated upward — starts at intermediate variants.
+  const PROGRESSION_VERSION = 4;
+  const MUSCLE_GROUPS = [
+    { id:'dos', label:'Dos' },
+    { id:'pectoraux', label:'Pectoraux' },
+    { id:'epaules', label:'Épaules' },
+    { id:'bras', label:'Bras' },
+    { id:'jambes', label:'Jambes' },
+    { id:'abdos', label:'Abdos / Gainage' },
+    { id:'autre', label:'Autre' }
+  ];
+  const DEFAULT_GROUPS = {
+    tractions:'dos', rowing:'dos', pompes:'pectoraux',
+    squat_bulgare:'jambes', fentes:'jambes', knee_raises:'abdos'
+  };
+  const DEFAULT_EXERCISES = [
+    { id:"tractions", name:"Tractions", group:'dos', enabled:true, level:1, pv:PROGRESSION_VERSION,
+      targetMin:8, targetMax:12, target:8, perLeg:false,
+      variants:[
+        "Tractions pronation",
+        "Tractions prise large",
+        "Tractions lestées",
+        "Tractions archer",
+        "Tractions une main (assistées)"
+      ]},
+    { id:"pompes", name:"Pompes", group:'pectoraux', enabled:true, level:1, pv:PROGRESSION_VERSION,
+      targetMin:15, targetMax:25, target:15, perLeg:false,
+      variants:[
+        "Pompes classiques",
+        "Pompes déclinées (pieds surélevés)",
+        "Pompes archer",
+        "Pompes pseudo-planche (mains reculées)",
+        "Pompes une main"
+      ]},
+    { id:"rowing", name:"Rowing inversé", group:'dos', enabled:true, level:1, pv:PROGRESSION_VERSION,
+      targetMin:12, targetMax:18, target:12, perLeg:false,
+      variants:[
+        "Rowing inversé pieds surélevés",
+        "Rowing inversé archer",
+        "Rowing inversé une main (assisté)",
+        "Rowing inversé une main strict",
+        "Rowing une main pieds surélevés"
+      ]},
+    { id:"squat_bulgare", name:"Squats unilatéraux", group:'jambes', enabled:true, level:1, pv:PROGRESSION_VERSION,
+      targetMin:10, targetMax:16, target:10, perLeg:true,
+      variants:[
+        "Squats bulgares",
+        "Squats bulgares sautés",
+        "Pistol squats",
+        "Pistol squats lestés",
+        "Pistol squats sautés"
+      ]},
+    { id:"knee_raises", name:"Abdos suspendus", group:'abdos', enabled:true, level:1, pv:PROGRESSION_VERSION,
+      targetMin:12, targetMax:18, target:12, perLeg:false,
+      variants:[
+        "Hanging knee raises",
+        "Hanging leg raises (jambes tendues)",
+        "Toes to bar",
+        "Toes to bar lestés",
+        "Essuie-glaces (windshield wipers)"
+      ]},
+    { id:"fentes", name:"Fentes", group:'jambes', enabled:true, level:1, pv:PROGRESSION_VERSION,
+      targetMin:12, targetMax:20, target:12, perLeg:true,
+      variants:[
+        "Fentes marchées",
+        "Fentes sautées",
+        "Fentes en déficit (pied avant surélevé)",
+        "Fentes en déficit sautées",
+        "Shrimp squats"
+      ]}
+  ];
+
+  function genericVariants(name){
+    return [1,2,3,4,5].map(n => name + " — niveau " + n);
+  }
+
+  function clampLevel(l){
+    l = parseInt(l,10);
+    if(isNaN(l)) return 1;
+    return Math.max(1, Math.min(5, l));
+  }
+
+  function variantOf(ex){
+    const lvl = clampLevel(ex.level);
+    if(Array.isArray(ex.variants) && ex.variants[lvl-1]) return ex.variants[lvl-1];
+    return ex.name;
+  }
+
+  let settings = { rounds:4, restBetweenEx:75, restBetweenRounds:120 };
+  let exercises = null;      // editable library (settings tab)
+  let session = null;        // in-progress session: snapshots its own exercise list
+  let history = [];
+  let activeTab = "seance";
+  let restState = null;
+
+  const DAY_NAMES = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+  const MONTH_NAMES = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+
+  function todayKey(){
+    const d = new Date();
+    return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+  }
+  function formatDate(d){
+    return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+  }
+  function activeExercises(){
+    return exercises.filter(e => e.enabled);
+  }
+
+  function newSession(){
+    const snapshot = activeExercises().map(e => ({
+      id:e.id, name:e.name,
+      target: typeof e.target === 'number' ? e.target : null,
+      perLeg: !!e.perLeg,
+      level: clampLevel(e.level),
+      variant: variantOf(e)
+    }));
+    return {
+      dateKey: todayKey(),
+      timestamp: Date.now(),
+      round: 1,
+      rounds: settings.rounds,
+      exercises: snapshot,   // frozen list for this session
+      data: snapshot.map(ex => ({
+        id: ex.id,
+        completedRounds: [],
+        doneThisRound: false
+      }))
+    };
+  }
+
+  // ---------- Storage ----------
+  async function loadAll(){
+    try{
+      const s = await window.storage.get('settings');
+      if(s && s.value) settings = Object.assign(settings, JSON.parse(s.value));
+    }catch(e){ /* defaults */ }
+
+    try{
+      const ex = await window.storage.get('exercises_v1');
+      if(ex && ex.value) exercises = JSON.parse(ex.value);
+    }catch(e){ /* defaults */ }
+    if(!exercises || !Array.isArray(exercises) || exercises.length === 0){
+      exercises = JSON.parse(JSON.stringify(DEFAULT_EXERCISES));
+    } else {
+      // Migration to pv4: numeric progressive targets + muscle groups
+      exercises.forEach(ex => {
+        const def = DEFAULT_EXERCISES.find(d => d.id === ex.id);
+        if(def && ex.pv !== PROGRESSION_VERSION){
+          // pv3 → pv4: just add group. pv1/pv2 → pv4: full upgrade.
+          if(ex.pv !== 3){
+            if(ex.pv !== 2){
+              const oldLvl = clampLevel(ex.level != null ? ex.level : 3);
+              ex.level = clampLevel(oldLvl - 2);
+            }
+            ex.variants = def.variants.slice();
+            ex.targetMin = def.targetMin;
+            ex.targetMax = def.targetMax;
+            ex.target = def.targetMin;
+            ex.perLeg = def.perLeg;
+          }
+          ex.group = def.group;
+          ex.pv = PROGRESSION_VERSION;
+        } else if(!def){
+          // Custom exercise: give it numeric target fields and a group if missing
+          if(!Array.isArray(ex.variants) || ex.variants.length !== 5){
+            ex.variants = genericVariants(ex.name);
+          }
+          if(typeof ex.targetMin !== 'number'){ ex.targetMin = 10; }
+          if(typeof ex.targetMax !== 'number'){ ex.targetMax = 20; }
+          if(typeof ex.target !== 'number'){ ex.target = ex.targetMin; }
+          if(ex.perLeg == null) ex.perLeg = false;
+          if(ex.level == null) ex.level = 1;
+          if(!ex.group) ex.group = 'autre';
+        }
+        if(!ex.group) ex.group = DEFAULT_GROUPS[ex.id] || 'autre';
+        ex.level = clampLevel(ex.level);
+        if(typeof ex.target === 'number'){
+          ex.target = Math.max(ex.targetMin, Math.min(ex.targetMax, ex.target));
+        }
+      });
+      saveExercises();
+    }
+
+    try{
+      const h = await window.storage.get('sessions_history');
+      if(h && h.value) history = JSON.parse(h.value);
+    }catch(e){ history = []; }
+
+    try{
+      const cur = await window.storage.get('current_session');
+      if(cur && cur.value){
+        const parsed = JSON.parse(cur.value);
+        if(parsed.dateKey === todayKey() && Array.isArray(parsed.exercises)){
+          session = parsed;
+        }
+      }
+    }catch(e){ /* none */ }
+
+    if(!session) session = newSession();
+  }
+
+  async function saveSettings(){
+    try{ await window.storage.set('settings', JSON.stringify(settings)); }
+    catch(e){ console.error('save settings failed', e); }
+  }
+  async function saveExercises(){
+    try{ await window.storage.set('exercises_v1', JSON.stringify(exercises)); }
+    catch(e){ console.error('save exercises failed', e); }
+  }
+  async function saveCurrentSession(){
+    try{ await window.storage.set('current_session', JSON.stringify(session)); }
+    catch(e){ console.error('save session failed', e); }
+  }
+  async function saveHistory(){
+    try{ await window.storage.set('sessions_history', JSON.stringify(history)); }
+    catch(e){ console.error('save history failed', e); }
+  }
+
+  // ---------- Toast ----------
+  let toastTimer;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> t.classList.remove('show'), 1800);
+  }
+
+  // ---------- Sound / vibration ----------
+  function beep(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+      o.start();
+      o.stop(ctx.currentTime + 0.55);
+    }catch(e){ /* audio unavailable */ }
+    if(navigator.vibrate) navigator.vibrate([120,60,120]);
+  }
+
+  // ---------- Rendering ----------
+  function render(){
+    document.getElementById('dateLine').textContent = formatDate(new Date());
+    document.querySelectorAll('.tab-btn').forEach(b=>{
+      b.classList.toggle('active', b.dataset.tab === activeTab);
+    });
+    const main = document.getElementById('main');
+    if(activeTab === 'seance') main.innerHTML = renderSeance();
+    else if(activeTab === 'tracking') main.innerHTML = renderTracking();
+    else if(activeTab === 'historique') main.innerHTML = renderHistorique();
+    else main.innerHTML = renderReglages();
+    attachHandlers();
+  }
+
+  function allDoneThisRound(){
+    return session.data.every(d => d.doneThisRound);
+  }
+
+  function sessionMatchesLibrary(){
+    const active = activeExercises();
+    if(active.length !== session.exercises.length) return false;
+    return active.every((e,i) =>
+      e.id === session.exercises[i].id &&
+      clampLevel(e.level) === clampLevel(session.exercises[i].level) &&
+      (typeof e.target === 'number' ? e.target : null) === session.exercises[i].target
+    );
+  }
+
+  function sessionHasProgress(){
+    return session.data.some(d => d.completedRounds.length > 0 || d.doneThisRound);
+  }
+
+  function renderSeance(){
+    if(session.exercises.length === 0){
+      return `<div class="empty-state"><div class="ico">◍</div>Aucun exercice actif.<br>Va dans Réglages pour activer ou ajouter des exercices.</div>`;
+    }
+
+    const roundIdx = session.round;
+    let pips = '';
+    for(let i=1;i<=session.rounds;i++){
+      let cls = 'pip';
+      if(i < roundIdx) cls += ' done';
+      else if(i === roundIdx) cls += ' current';
+      pips += `<div class="${cls}">${i}</div>`;
+    }
+
+    // Banner if library changed but session already has progress
+    let syncBanner = '';
+    if(!sessionMatchesLibrary()){
+      if(sessionHasProgress()){
+        syncBanner = `<button class="finish-btn subtle" id="applyNewList">La liste d'exercices a changé — appuyer pour recommencer la séance avec la nouvelle liste</button>`;
+      } else {
+        // no progress: silently sync
+        session = newSession();
+        saveCurrentSession();
+      }
+    }
+
+    let cards = session.exercises.map((ex, idx) => {
+      const d = session.data[idx];
+      const isDone = d.doneThisRound;
+      return `
+      <div class="exercise ${isDone?'completed':''}" data-idx="${idx}">
+        <div class="ex-top">
+          <div>
+            <div class="ex-num">${String(idx+1).padStart(2,'0')} / ${String(session.exercises.length).padStart(2,'0')}</div>
+            <div class="ex-name">${escapeHtml(ex.name)}</div>
+            <div class="ex-variant"><span class="lvl-badge">N${ex.level || 1}</span>${escapeHtml(ex.variant || ex.name)}</div>
+            <div class="ex-target">${typeof ex.target === 'number' ? 'Cible : '+ex.target+' reps'+(ex.perLeg?' / jambe':'')+' × tous les tours' : ''}</div>
+          </div>
+          <button class="ex-check" data-check="${idx}">${isDone?'✓':''}</button>
+        </div>
+        <div class="ex-row">
+          <div class="stepper">
+            <button data-step="minus" data-idx="${idx}">−</button>
+            <button data-step="plus" data-idx="${idx}">+</button>
+          </div>
+          <input class="reps-input mono" type="number" inputmode="numeric" placeholder="${typeof ex.target === 'number' ? ex.target : 'reps'}" data-input="${idx}" value="${d._pending!=null?d._pending:''}">
+        </div>
+        <button class="validate-btn" data-validate="${idx}">${isDone ? 'Série enregistrée' : 'Valider la série'}</button>
+      </div>`;
+    }).join('');
+
+    const ready = allDoneThisRound();
+    const isLastRound = session.round >= session.rounds;
+    const finishLabel = ready
+      ? (isLastRound ? 'Terminer la séance' : `Tour ${session.round} terminé — repos puis tour suivant`)
+      : `${session.data.filter(d=>!d.doneThisRound).length} exercice(s) restant(s) ce tour`;
+
+    return `
+      <div class="round-tracker">
+        <div>
+          <div class="round-label">Tour</div>
+          <div class="round-pips">${pips}</div>
+        </div>
+      </div>
+      ${syncBanner}
+      ${cards}
+      <button class="finish-btn ${ready?'ready':''}" id="roundAction">${finishLabel}</button>
+    `;
+  }
+
+  // ---------- Tracking ----------
+  function buildTrackingSeries(){
+    // Map: exercise name -> [{timestamp, totalReps, level}] sorted by time
+    const map = new Map();
+    const sorted = [...history].sort((a,b)=> a.timestamp - b.timestamp);
+    sorted.forEach(s => {
+      s.summary.forEach(e => {
+        if(!map.has(e.name)) map.set(e.name, []);
+        map.get(e.name).push({ t: s.timestamp, reps: e.totalReps, level: e.level || null });
+      });
+    });
+    return map;
+  }
+
+  function shortDate(ts){
+    const d = new Date(ts);
+    return d.getDate() + '/' + (d.getMonth()+1);
+  }
+
+  function renderChart(points){
+    // points: [{t, reps}] chronological. Show up to last 10 sessions.
+    const data = points.slice(-10);
+    const W = 460, H = 150;
+    const padL = 8, padR = 8, padTop = 22, padBottom = 22;
+    const innerW = W - padL - padR;
+    const innerH = H - padTop - padBottom;
+    const maxVal = Math.max(...data.map(p=>p.reps), 1);
+
+    const n = data.length;
+    const slot = innerW / n;
+    const barW = Math.min(34, slot * 0.55);
+
+    let bars = '', labels = '', vals = '', sparkPts = [], lvlMarks = '';
+    data.forEach((p, i) => {
+      const cx = padL + slot * i + slot / 2;
+      const h = Math.max(2, (p.reps / maxVal) * innerH);
+      const y = padTop + innerH - h;
+      const isLast = i === n - 1;
+      bars += `<rect class="bar ${isLast?'last':''}" x="${(cx - barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="4"></rect>`;
+      vals += `<text class="val-label ${isLast?'last':''}" x="${cx.toFixed(1)}" y="${(y-6).toFixed(1)}">${p.reps}</text>`;
+      labels += `<text class="axis-label" x="${cx.toFixed(1)}" y="${H-6}" text-anchor="middle">${shortDate(p.t)}</text>`;
+      // Level change marker: shown when level differs from the previous session
+      const prevLvl = i > 0 ? data[i-1].level : null;
+      if(p.level && prevLvl && p.level !== prevLvl){
+        lvlMarks += `<text class="axis-label" x="${cx.toFixed(1)}" y="${(y + Math.min(h-4, 14)).toFixed(1)}" text-anchor="middle" fill="var(--accent)" font-weight="600">N${p.level}</text>`;
+      }
+      sparkPts.push(`${cx.toFixed(1)},${(y).toFixed(1)}`);
+    });
+
+    let spark = '';
+    if(n >= 2){
+      spark = `<polyline class="spark" points="${sparkPts.join(' ')}" opacity="0.5"></polyline>`;
+    }
+
+    const gridY = padTop + innerH;
+    return `
+    <svg class="track-chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img">
+      <line class="grid-line" x1="${padL}" y1="${gridY}" x2="${W-padR}" y2="${gridY}"></line>
+      ${bars}
+      ${spark}
+      ${vals}
+      ${labels}
+      ${lvlMarks}
+    </svg>`;
+  }
+
+  function renderTracking(){
+    if(history.length === 0){
+      return `<div class="empty-state"><div class="ico">◍</div>Pas encore de données à visualiser.<br>Termine au moins une séance pour voir tes progrès ici.</div>`;
+    }
+
+    const series = buildTrackingSeries();
+
+    // Order tracking cards to match current library order, then any others (renamed/removed exercises still in history)
+    const orderedNames = [];
+    exercises.forEach(e => { if(series.has(e.name)) orderedNames.push(e.name); });
+    series.forEach((_, name) => { if(!orderedNames.includes(name)) orderedNames.push(name); });
+
+    return orderedNames.map(name => {
+      const pts = series.get(name);
+      const last = pts[pts.length-1].reps;
+      const best = Math.max(...pts.map(p=>p.reps));
+      const first = pts[0].reps;
+      const delta = last - first;
+      const deltaCls = delta > 0 ? 'up' : (delta < 0 ? 'down' : 'flat');
+      const deltaTxt = pts.length < 2 ? '—' : (delta > 0 ? '+'+delta : String(delta));
+      const libEx = exercises.find(e => e.name === name);
+      const lvlBadge = libEx ? `<span class="lvl-badge" style="margin-left:8px;">N${clampLevel(libEx.level)}</span>` : '';
+
+      const chart = pts.length >= 2
+        ? renderChart(pts)
+        : `<div class="track-note">Une seule séance enregistrée — le graphique apparaîtra dès la deuxième.</div>`;
+
+      return `
+      <div class="track-card">
+        <div class="track-head">
+          <div class="track-name">${escapeHtml(name)}${lvlBadge}</div>
+          <div class="track-delta ${deltaCls}">${deltaTxt}${pts.length >= 2 ? ' reps' : ''}</div>
+        </div>
+        <div class="track-stats">
+          <div class="track-stat">Dernière<b>${last}</b></div>
+          <div class="track-stat">Record<b>${best}</b></div>
+          <div class="track-stat">Séances<b>${pts.length}</b></div>
+        </div>
+        ${chart}
+      </div>`;
+    }).join('') + `<div class="track-note" style="padding:0 4px 8px 4px;">Les valeurs correspondent au total de reps par séance (tous tours confondus). Un marqueur « N » doré apparaît sur une barre quand le niveau de difficulté a changé par rapport à la séance précédente — une baisse de reps à ce moment-là est normale et attendue.</div>`;
+  }
+
+  function renderHistorique(){
+    if(history.length === 0){
+      return `<div class="empty-state"><div class="ico">◍</div>Aucune séance enregistrée pour l'instant.<br>Termine ta première séance pour la voir ici.</div>`;
+    }
+    const sorted = [...history].sort((a,b)=> b.timestamp - a.timestamp);
+    return sorted.map(s => {
+      const d = new Date(s.timestamp);
+      const exRows = s.summary.map(e => {
+        const hitMark = e.hit ? ' <span style="color:var(--teal);">✓</span>' : (e.target != null ? '' : '');
+        const lvlTag = e.level ? ' <span style="color:var(--accent);font-family:\'IBM Plex Mono\',monospace;font-size:10px;">N'+e.level+'</span>' : '';
+        return `<div class="hist-ex"><span>${escapeHtml(e.name)}${lvlTag}${hitMark}</span><b>${e.totalReps}</b></div>`;
+      }).join('');
+      const progRows = (s.progressions && s.progressions.length > 0)
+        ? `<div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--line);">${s.progressions.map(p=>`<div style="font-size:12px; color:var(--accent); margin-bottom:3px;">▲ ${escapeHtml(p)}</div>`).join('')}</div>`
+        : '';
+      return `
+      <div class="hist-session">
+        <div class="hist-date">${formatDate(d)}</div>
+        <div class="hist-meta">${s.roundsCompleted} tour(s) · ${s.totalReps} reps au total</div>
+        <div class="hist-grid">${exRows}</div>
+        ${progRows}
+      </div>`;
+    }).join('');
+  }
+
+  function renderReglages(){
+    // Build one editor row per exercise (index = position in the exercises array = circuit order)
+    function exerciseEditorRow(ex, idx){
+      const lvl = clampLevel(ex.level);
+      const pips = [1,2,3,4,5].map(n =>
+        `<button class="lvl-pip ${n===lvl?'active':''}" data-exlevel="${idx}" data-lvl="${n}">${n}</button>`
+      ).join('');
+      const hasNumericTarget = typeof ex.target === 'number';
+      const circuitPos = ex.enabled
+        ? `<span style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-right:6px;">#${activeExercises().indexOf(ex)+1}</span>`
+        : '';
+      const targetRow = hasNumericTarget ? `
+      <div class="ex-level-row ${ex.enabled?'':'hidden-row'}" style="padding-top:0;">
+        <div class="settings-stepper">
+          <button data-extarget="${idx}" data-delta="-1">−</button>
+          <div class="val mono">${ex.target}</div>
+          <button data-extarget="${idx}" data-delta="1">+</button>
+        </div>
+        <div class="lvl-variant-name" style="color:var(--text-dim);">Cible actuelle${ex.perLeg?' / jambe':''} · fourchette ${ex.targetMin}–${ex.targetMax}</div>
+      </div>` : '';
+      return `
+      <div class="ex-edit-row ${ex.enabled?'':'off'}" style="border-bottom:none; padding-bottom:4px;">
+        <button class="ex-toggle ${ex.enabled?'on':''}" data-extoggle="${idx}" aria-label="Activer/désactiver"></button>
+        <div class="ex-edit-main">
+          <div class="ex-edit-name">${circuitPos}${escapeHtml(ex.name)}</div>
+          <div class="ex-edit-target">${hasNumericTarget ? 'Cible '+ex.target+(ex.perLeg?' / jambe':'')+' · '+ex.targetMin+'–'+ex.targetMax : 'Pas de cible'}</div>
+        </div>
+        <div class="ex-edit-actions">
+          <button data-exmove="up" data-idx="${idx}" ${idx===0?'disabled':''}>↑</button>
+          <button data-exmove="down" data-idx="${idx}" ${idx===exercises.length-1?'disabled':''}>↓</button>
+          <button class="del" data-exdel="${idx}">✕</button>
+        </div>
+      </div>
+      <div class="ex-level-row ${ex.enabled?'':'hidden-row'}" style="border-bottom:none; padding-bottom:4px;">
+        <div class="lvl-pips">${pips}</div>
+        <div class="lvl-variant-name">${escapeHtml(variantOf(ex))}</div>
+      </div>
+      ${targetRow}`;
+    }
+
+    // Group exercises by muscle group, preserving circuit order inside each group
+    const groupSections = MUSCLE_GROUPS.map(g => {
+      const members = exercises
+        .map((ex, idx) => ({ ex, idx }))
+        .filter(m => (m.ex.group || 'autre') === g.id);
+      if(members.length === 0) return '';
+      return `
+      <div class="group-header">${g.label}</div>
+      ${members.map(m => exerciseEditorRow(m.ex, m.idx)).join('')}`;
+    }).join('');
+
+    const groupOptions = MUSCLE_GROUPS.map(g => `<option value="${g.id}">${g.label}</option>`).join('');
+
+    return `
+      <div class="settings-card">
+        <div class="settings-title">Exercices du circuit — par groupe musculaire</div>
+        ${groupSections}
+        <div class="add-ex-form">
+          <input type="text" id="newExName" placeholder="Nom de l'exercice (ex. Dips)" maxlength="40">
+          <select id="newExGroup" class="group-select">${groupOptions}</select>
+          <div style="display:flex; gap:8px;">
+            <input type="number" inputmode="numeric" id="newExMin" placeholder="Cible basse (ex. 10)" style="flex:1;">
+            <input type="number" inputmode="numeric" id="newExMax" placeholder="Cible haute (ex. 20)" style="flex:1;">
+          </div>
+          <button class="add-ex-btn" id="addExBtn">+ Ajouter l'exercice</button>
+        </div>
+        <div class="apply-note">Le numéro doré (#1, #2…) indique la position dans le circuit — l'ordre d'exécution en séance reste indépendant du regroupement musculaire, ce qui permet d'alterner les groupes (tirage, poussée, jambes…) au fil du circuit. Les flèches ↑↓ modifient cette position. La cible augmente de 1 automatiquement quand tu l'atteins sur tous les tours ; en haut de fourchette, le niveau suivant se débloque et la cible repart en bas. Changer manuellement de niveau remet la cible au minimum.</div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-title">Structure</div>
+        <div class="settings-row">
+          <span>Nombre de tours</span>
+          <div class="settings-stepper">
+            <button data-setting="rounds" data-delta="-1">−</button>
+            <div class="val mono">${settings.rounds}</div>
+            <button data-setting="rounds" data-delta="1">+</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span>Repos entre exercices</span>
+          <div class="settings-stepper">
+            <button data-setting="restBetweenEx" data-delta="-15">−</button>
+            <div class="val mono">${settings.restBetweenEx}s</div>
+            <button data-setting="restBetweenEx" data-delta="15">+</button>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span>Repos entre tours</span>
+          <div class="settings-stepper">
+            <button data-setting="restBetweenRounds" data-delta="-15">−</button>
+            <div class="val mono">${settings.restBetweenRounds}s</div>
+            <button data-setting="restBetweenRounds" data-delta="15">+</button>
+          </div>
+        </div>
+      </div>
+      <button class="finish-btn subtle" id="resetSession">Réinitialiser la séance du jour</button>
+    `;
+  }
+
+  function escapeHtml(str){
+    return String(str)
+      .replaceAll('&','&amp;').replaceAll('<','&lt;')
+      .replaceAll('>','&gt;').replaceAll('"','&quot;');
+  }
+
+  // ---------- Handlers ----------
+  function attachHandlers(){
+    document.querySelectorAll('[data-step]').forEach(btn=>{
+      btn.onclick = () => {
+        const idx = +btn.dataset.idx;
+        const input = document.querySelector(`[data-input="${idx}"]`);
+        let v = parseInt(input.value || '0', 10);
+        v += (btn.dataset.step === 'plus' ? 1 : -1);
+        if(v < 0) v = 0;
+        input.value = v;
+        session.data[idx]._pending = v;
+      };
+    });
+
+    document.querySelectorAll('[data-input]').forEach(inp=>{
+      inp.oninput = () => {
+        const idx = +inp.dataset.input;
+        session.data[idx]._pending = inp.value === '' ? null : parseInt(inp.value,10);
+      };
+    });
+
+    document.querySelectorAll('[data-validate]').forEach(btn=>{
+      btn.onclick = () => validateExercise(+btn.dataset.validate);
+    });
+    document.querySelectorAll('[data-check]').forEach(btn=>{
+      btn.onclick = () => validateExercise(+btn.dataset.check);
+    });
+
+    const roundAction = document.getElementById('roundAction');
+    if(roundAction) roundAction.onclick = onRoundActionClick;
+
+    const applyNewList = document.getElementById('applyNewList');
+    if(applyNewList){
+      applyNewList.onclick = () => {
+        session = newSession();
+        saveCurrentSession();
+        showToast('Séance relancée avec la nouvelle liste');
+        render();
+      };
+    }
+
+    // Settings: structure steppers
+    document.querySelectorAll('[data-setting]').forEach(btn=>{
+      btn.onclick = () => {
+        const key = btn.dataset.setting;
+        const delta = +btn.dataset.delta;
+        let val = settings[key] + delta;
+        if(key === 'rounds') val = Math.max(1, Math.min(8, val));
+        else val = Math.max(0, Math.min(300, val));
+        settings[key] = val;
+        saveSettings();
+        render();
+      };
+    });
+
+    // Settings: exercise editor
+    document.querySelectorAll('[data-exlevel]').forEach(btn=>{
+      btn.onclick = () => {
+        const idx = +btn.dataset.exlevel;
+        const newLvl = clampLevel(btn.dataset.lvl);
+        if(newLvl !== clampLevel(exercises[idx].level)){
+          exercises[idx].level = newLvl;
+          if(typeof exercises[idx].target === 'number'){
+            exercises[idx].target = exercises[idx].targetMin;
+          }
+        }
+        saveExercises();
+        syncSessionIfPristine();
+        render();
+      };
+    });
+
+    document.querySelectorAll('[data-extarget]').forEach(btn=>{
+      btn.onclick = () => {
+        const idx = +btn.dataset.extarget;
+        const ex = exercises[idx];
+        if(typeof ex.target !== 'number') return;
+        ex.target = Math.max(ex.targetMin, Math.min(ex.targetMax, ex.target + (+btn.dataset.delta)));
+        saveExercises();
+        syncSessionIfPristine();
+        render();
+      };
+    });
+
+    document.querySelectorAll('[data-extoggle]').forEach(btn=>{
+      btn.onclick = () => {
+        const idx = +btn.dataset.extoggle;
+        exercises[idx].enabled = !exercises[idx].enabled;
+        saveExercises();
+        syncSessionIfPristine();
+        render();
+      };
+    });
+
+    document.querySelectorAll('[data-exmove]').forEach(btn=>{
+      btn.onclick = () => {
+        const idx = +btn.dataset.idx;
+        const dir = btn.dataset.exmove === 'up' ? -1 : 1;
+        const target = idx + dir;
+        if(target < 0 || target >= exercises.length) return;
+        const tmp = exercises[idx];
+        exercises[idx] = exercises[target];
+        exercises[target] = tmp;
+        saveExercises();
+        syncSessionIfPristine();
+        render();
+      };
+    });
+
+    document.querySelectorAll('[data-exdel]').forEach(btn=>{
+      btn.onclick = () => {
+        const idx = +btn.dataset.exdel;
+        const name = exercises[idx].name;
+        exercises.splice(idx, 1);
+        saveExercises();
+        syncSessionIfPristine();
+        showToast(`« ${name} » supprimé`);
+        render();
+      };
+    });
+
+    const addBtn = document.getElementById('addExBtn');
+    if(addBtn){
+      addBtn.onclick = () => {
+        const nameInput = document.getElementById('newExName');
+        const minInput = document.getElementById('newExMin');
+        const maxInput = document.getElementById('newExMax');
+        const name = (nameInput.value || '').trim();
+        if(!name){
+          showToast("Entre un nom d'exercice");
+          return;
+        }
+        let tMin = parseInt(minInput.value, 10);
+        let tMax = parseInt(maxInput.value, 10);
+        if(isNaN(tMin) || tMin < 1) tMin = 10;
+        if(isNaN(tMax) || tMax <= tMin) tMax = tMin + 8;
+        const groupSel = document.getElementById('newExGroup');
+        const group = groupSel && groupSel.value ? groupSel.value : 'autre';
+        exercises.push({
+          id: 'custom_' + Date.now(),
+          name: name,
+          group: group,
+          enabled: true,
+          level: 1,
+          pv: PROGRESSION_VERSION,
+          targetMin: tMin,
+          targetMax: tMax,
+          target: tMin,
+          perLeg: false,
+          variants: genericVariants(name)
+        });
+        saveExercises();
+        syncSessionIfPristine();
+        showToast(`« ${name} » ajouté (cible ${tMin}–${tMax})`);
+        render();
+      };
+    }
+
+    const resetBtn = document.getElementById('resetSession');
+    if(resetBtn){
+      resetBtn.onclick = () => {
+        session = newSession();
+        saveCurrentSession();
+        activeTab = 'seance';
+        showToast('Séance réinitialisée');
+        render();
+      };
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.onclick = () => {
+        activeTab = btn.dataset.tab;
+        render();
+      };
+    });
+  }
+
+  // If the current session has no progress yet, silently rebuild it from the new list
+  function syncSessionIfPristine(){
+    if(!sessionHasProgress()){
+      session = newSession();
+      saveCurrentSession();
+    }
+  }
+
+  function validateExercise(idx){
+    const d = session.data[idx];
+    if(d.doneThisRound){
+      d.doneThisRound = false;
+      d.completedRounds.pop();
+      saveCurrentSession();
+      render();
+      return;
+    }
+    const reps = d._pending;
+    if(reps == null || isNaN(reps) || reps <= 0){
+      showToast('Entre un nombre de reps avant de valider');
+      return;
+    }
+    d.completedRounds[session.round - 1] = reps;
+    d.doneThisRound = true;
+    d._pending = null;
+    saveCurrentSession();
+
+    const nextIdx = session.data.findIndex(x=>!x.doneThisRound);
+    if(nextIdx !== -1){
+      const nx = session.exercises[nextIdx];
+      startRest(settings.restBetweenEx, nx.variant || nx.name, false);
+    }
+    render();
+  }
+
+  function onRoundActionClick(){
+    if(!allDoneThisRound()) return;
+    if(session.round >= session.rounds){
+      finishSession();
+      return;
+    }
+    startRest(settings.restBetweenRounds, `Tour ${session.round + 1}`, true);
+  }
+
+  function advanceRound(){
+    session.round += 1;
+    session.data.forEach(d => d.doneThisRound = false);
+    saveCurrentSession();
+    render();
+  }
+
+  async function finishSession(){
+    const progressions = [];
+    const summary = session.exercises.map((ex, idx) => {
+      const reps = session.data[idx].completedRounds.filter(r=>typeof r==='number');
+      const totalReps = reps.reduce((a,b)=>a+b,0);
+      // Target hit = every round completed AND every round >= target
+      const hit = typeof ex.target === 'number'
+        && reps.length === session.rounds
+        && reps.every(r => r >= ex.target);
+      return {
+        name: ex.name,
+        level: ex.level || null,
+        variant: ex.variant || null,
+        target: typeof ex.target === 'number' ? ex.target : null,
+        hit: !!hit,
+        totalReps
+      };
+    });
+    const totalReps = summary.reduce((a,e)=>a+e.totalReps,0);
+
+    // Apply auto-progression to the library
+    summary.forEach(s => {
+      if(!s.hit) return;
+      const ex = exercises.find(e => e.name === s.name);
+      if(!ex || typeof ex.target !== 'number') return;
+      if(ex.target < ex.targetMax){
+        ex.target += 1;
+        progressions.push(`${ex.name} : cible ${ex.target - 1} → ${ex.target}`);
+      } else if(clampLevel(ex.level) < 5){
+        ex.level = clampLevel(ex.level) + 1;
+        ex.target = ex.targetMin;
+        progressions.push(`${ex.name} : niveau ${ex.level} débloqué ! Cible remise à ${ex.targetMin}`);
+      } else {
+        progressions.push(`${ex.name} : plafond atteint (N5 à ${ex.targetMax} reps) 👑`);
+      }
+    });
+    if(progressions.length > 0) await saveExercises();
+
+    history.push({
+      dateKey: session.dateKey,
+      timestamp: Date.now(),
+      roundsCompleted: session.rounds,
+      totalReps,
+      progressions,
+      summary
+    });
+    await saveHistory();
+    session = newSession();
+    await saveCurrentSession();
+    showToast(progressions.length > 0
+      ? `Séance enregistrée · ${progressions.length} progression(s) 💪`
+      : 'Séance enregistrée 💪');
+    activeTab = 'historique';
+    render();
+  }
+
+  // ---------- Rest timer ----------
+  const CIRC = 2 * Math.PI * 45;
+
+  function startRest(seconds, nextLabel, isEndOfRound){
+    if(seconds <= 0){
+      if(isEndOfRound) advanceRound();
+      return;
+    }
+    clearRestInterval();
+    restState = { seconds, total: seconds, next: nextLabel, isEndOfRound };
+    document.getElementById('restNext').textContent = 'Prochain : ' + nextLabel;
+    updateTimerUI();
+    document.getElementById('restOverlay').classList.add('show');
+    restState.interval = setInterval(tickRest, 1000);
+  }
+
+  function tickRest(){
+    restState.seconds -= 1;
+    if(restState.seconds <= 0){
+      beep();
+      endRest();
+      return;
+    }
+    updateTimerUI();
+  }
+
+  function updateTimerUI(){
+    const { seconds, total } = restState;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    document.getElementById('timerNum').textContent = `${m}:${String(s).padStart(2,'0')}`;
+    const frac = seconds / total;
+    document.getElementById('timerFill').style.strokeDashoffset = CIRC * (1 - frac);
+  }
+
+  function clearRestInterval(){
+    if(restState && restState.interval) clearInterval(restState.interval);
+  }
+
+  function endRest(){
+    clearRestInterval();
+    document.getElementById('restOverlay').classList.remove('show');
+    const wasEndOfRound = restState && restState.isEndOfRound;
+    restState = null;
+    if(wasEndOfRound) advanceRound();
+  }
+
+  document.getElementById('restSkip').onclick = endRest;
+  document.getElementById('restPlus').onclick = () => {
+    if(!restState) return;
+    restState.seconds += 15;
+    restState.total += 15;
+    updateTimerUI();
+  };
+  document.getElementById('restMinus').onclick = () => {
+    if(!restState) return;
+    restState.seconds = Math.max(1, restState.seconds - 15);
+    updateTimerUI();
+  };
+
+  // ---------- Init ----------
+  async function init(){
+    await loadAll();
+    render();
+  }
+  init();
+
+})();
+</script>
+</body>
+</html>
