@@ -471,6 +471,19 @@
     letter-spacing:0.06em;
     text-transform:uppercase;
   }
+  .backup-stat{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:12.5px;
+    color:var(--text-dim);
+    padding:4px 0;
+  }
+  .backup-stat span:last-child{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    color:var(--text-faint);
+  }
   .apply-note{
     font-size:12px;
     color:var(--text-faint);
@@ -1382,6 +1395,19 @@
           </div>
         </div>
       </div>
+
+      <div class="settings-card">
+        <div class="settings-title">Sauvegarde</div>
+        <div class="backup-stat">
+          <span>${history.length} séance(s) enregistrée(s)</span>
+          <span>${lastBackupLabel()}</span>
+        </div>
+        <button class="add-ex-btn" id="exportBtn" style="width:100%; margin-top:10px;">↓ Exporter la sauvegarde</button>
+        <button class="add-ex-btn" id="importBtn" style="width:100%; margin-top:8px; border-color:var(--line); color:var(--text-dim);">↑ Restaurer depuis un fichier</button>
+        <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
+        <div class="apply-note">L'export ouvre la feuille de partage d'iOS : choisis « Enregistrer dans Fichiers » puis iCloud Drive (ou Google Drive). Le fichier porte toujours le même nom (sport-sauvegarde.json) : en l'enregistrant au même endroit, iOS propose « Remplacer » et tu ne conserves qu'un seul fichier, toujours à jour. La restauration va rechercher ce fichier et remplace l'intégralité des données actuelles. Utile car Safari peut effacer les données d'un site après plusieurs semaines sans ouverture.</div>
+      </div>
+
       <button class="finish-btn subtle" id="resetSession">Réinitialiser la séance du jour</button>
     `;
   }
@@ -1550,6 +1576,20 @@
       };
     }
 
+    const exportBtn = document.getElementById('exportBtn');
+    if(exportBtn) exportBtn.onclick = exportBackup;
+
+    const importBtn = document.getElementById('importBtn');
+    const importFile = document.getElementById('importFile');
+    if(importBtn && importFile){
+      importBtn.onclick = () => importFile.click();
+      importFile.onchange = () => {
+        const f = importFile.files && importFile.files[0];
+        if(f) importBackup(f);
+        importFile.value = '';
+      };
+    }
+
     const resetBtn = document.getElementById('resetSession');
     if(resetBtn){
       resetBtn.onclick = () => {
@@ -1678,6 +1718,127 @@
     showToast(progressions.length > 0
       ? `Séance enregistrée · ${progressions.length} progression(s) 💪`
       : 'Séance enregistrée 💪');
+    activeTab = 'historique';
+    render();
+  }
+
+  // ---------- Backup: export / import ----------
+  // No automatic cloud sync is possible from a static web app: writing to
+  // iCloud Drive or Google Drive requires either a native app or an OAuth
+  // server. What IS possible is handing the file to iOS's own share sheet,
+  // where "Save to Files" → iCloud Drive works. Restore uses a file picker,
+  // which can read straight back out of iCloud Drive.
+  const BACKUP_KEYS = ['sessions_history', 'exercises_v1', 'settings', 'current_session'];
+
+  function lastBackupLabel(){
+    try{
+      const ts = localStorage.getItem('last_backup_at');
+      if(!ts) return 'Jamais exportée';
+      const d = new Date(parseInt(ts, 10));
+      return 'Export : ' + formatDate(d);
+    }catch(e){ return 'Jamais exportée'; }
+  }
+
+  function buildBackupPayload(){
+    return JSON.stringify({
+      app: 'suivi-musculation',
+      backupVersion: 1,
+      progressionVersion: PROGRESSION_VERSION,
+      exportedAt: new Date().toISOString(),
+      data: {
+        sessions_history: history,
+        exercises_v1: exercises,
+        settings: settings,
+        current_session: session
+      }
+    }, null, 2);
+  }
+
+  // Fixed filename (not date-stamped) so that saving to the same iCloud Drive
+  // folder offers "Replace" instead of piling up one file per export. The
+  // export date lives inside the JSON (exportedAt) and in the Settings card.
+  function backupFilename(){
+    return 'sport-sauvegarde.json';
+  }
+
+  async function exportBackup(){
+    const json = buildBackupPayload();
+    const filename = backupFilename();
+    const file = new File([json], filename, { type:'application/json' });
+
+    // Preferred path on iOS: the native share sheet, which offers "Save to Files".
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      try{
+        await navigator.share({ files:[file], title:'Sauvegarde Sport' });
+        localStorage.setItem('last_backup_at', String(Date.now()));
+        showToast('Sauvegarde exportée');
+        render();
+        return;
+      }catch(e){
+        if(e && e.name === 'AbortError') return; // user cancelled — not an error
+      }
+    }
+
+    // Fallback for browsers without file sharing: a normal download.
+    try{
+      const blob = new Blob([json], { type:'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=> URL.revokeObjectURL(url), 1000);
+      localStorage.setItem('last_backup_at', String(Date.now()));
+      showToast('Sauvegarde téléchargée');
+      render();
+    }catch(e){
+      showToast("Export impossible sur ce navigateur");
+    }
+  }
+
+  async function importBackup(file){
+    let parsed;
+    try{
+      const text = await file.text();
+      parsed = JSON.parse(text);
+    }catch(e){
+      showToast('Fichier illisible — JSON invalide');
+      return;
+    }
+
+    const d = parsed && parsed.data;
+    if(!d || !Array.isArray(d.sessions_history) || !Array.isArray(d.exercises_v1)){
+      showToast("Ce fichier n'est pas une sauvegarde valide");
+      return;
+    }
+
+    const count = d.sessions_history.length;
+    const ok = confirm(
+      `Restaurer ${count} séance(s) ?\n\n` +
+      `Toutes les données actuelles de l'app (historique, niveaux, cibles, réglages) ` +
+      `seront définitivement remplacées.`
+    );
+    if(!ok) return;
+
+    history = d.sessions_history;
+    exercises = d.exercises_v1;
+    if(d.settings) settings = Object.assign({ rounds:4, restBetweenEx:75, restBetweenRounds:120 }, d.settings);
+
+    // The restored session only applies if it belongs to today; otherwise start fresh.
+    if(d.current_session && d.current_session.dateKey === todayKey() && Array.isArray(d.current_session.exercises)){
+      session = d.current_session;
+    } else {
+      session = newSession();
+    }
+
+    await saveHistory();
+    await saveExercises();
+    await saveSettings();
+    await saveCurrentSession();
+
+    showToast(`${count} séance(s) restaurée(s)`);
     activeTab = 'historique';
     render();
   }
