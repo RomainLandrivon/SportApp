@@ -846,6 +846,7 @@
   let history = [];
   let activeTab = "seance";
   let restState = null;
+  let backupInProgress = false;
 
   const DAY_NAMES = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
   const MONTH_NAMES = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
@@ -1773,25 +1774,40 @@
   }
 
   async function exportBackup(){
-    const json = buildBackupPayload();
-    const filename = backupFilename();
-    const file = new File([json], filename, { type:'application/json' });
-
-    // Preferred path on iOS: the native share sheet, which offers "Save to Files".
-    if(navigator.canShare && navigator.canShare({ files:[file] })){
-      try{
-        await navigator.share({ files:[file], title:'Sauvegarde Sport' });
-        localStorage.setItem('last_backup_at', String(Date.now()));
-        showToast('Sauvegarde exportée');
-        render();
-        return;
-      }catch(e){
-        if(e && e.name === 'AbortError') return; // user cancelled — not an error
-      }
-    }
-
-    // Fallback for browsers without file sharing: a normal download.
+    if(backupInProgress) return;      // guard against a double-tap / double-fire
+    backupInProgress = true;
     try{
+      const json = buildBackupPayload();
+      const filename = backupFilename();
+      const canShareFiles = (() => {
+        try{
+          const probe = new File([json], filename, { type:'application/json' });
+          return !!(navigator.canShare && navigator.canShare({ files:[probe] }));
+        }catch(e){ return false; }
+      })();
+
+      // If the native share sheet can take files, use it EXCLUSIVELY. Never
+      // fall through to the download path afterwards — doing so produced a
+      // second file (the previous bug). The download path is only for
+      // browsers that can't share files at all (e.g. desktop).
+      if(canShareFiles){
+        try{
+          const file = new File([json], filename, { type:'application/json' });
+          await navigator.share({ files:[file], title:'Sauvegarde Sport' });
+          localStorage.setItem('last_backup_at', String(Date.now()));
+          showToast('Sauvegarde exportée');
+          render();
+        }catch(e){
+          // AbortError = user dismissed the sheet. Anything else = share
+          // failed; tell the user rather than silently downloading a file.
+          if(!(e && e.name === 'AbortError')){
+            showToast("Partage annulé ou impossible");
+          }
+        }
+        return;
+      }
+
+      // Fallback for browsers without file sharing: a normal download.
       const blob = new Blob([json], { type:'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1804,8 +1820,8 @@
       localStorage.setItem('last_backup_at', String(Date.now()));
       showToast('Sauvegarde téléchargée');
       render();
-    }catch(e){
-      showToast("Export impossible sur ce navigateur");
+    }finally{
+      backupInProgress = false;
     }
   }
 
