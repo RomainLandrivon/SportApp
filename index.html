@@ -1664,6 +1664,17 @@
     });
     saveCurrentSession();
     render();
+    // New round starts at exercise #1 — scroll back to the top so the user
+    // isn't left at the bottom where they validated the last exercise.
+    scrollToTop();
+  }
+
+  function scrollToTop(){
+    try{
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }catch(e){
+      window.scrollTo(0, 0);
+    }
   }
 
   async function finishSession(){
