@@ -1,1982 +1,1227 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#191221">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Sport">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<link rel="apple-touch-icon" sizes="167x167" href="icon-167.png">
-<link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
-<link rel="apple-touch-icon" sizes="120x120" href="icon-120.png">
-<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
-<title>Full Body — Suivi</title>
+<meta name="apple-mobile-web-app-title" content="Suivi">
+<title>Suivi</title>
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#15141a;
-    --surface:#1e1d24;
-    --surface-2:#26252e;
-    --surface-3:#302f39;
-    --text:#f3f0ea;
-    --text-dim:#8b8894;
-    --text-faint:#5c5a66;
-    --accent:#e3b23c;
-    --accent-dim:#8a6f27;
-    --teal:#4a9b8e;
-    --danger:#b84a3e;
-    --line:#34333d;
-    --safe-top:env(safe-area-inset-top, 0px);
-    --safe-bottom:env(safe-area-inset-bottom, 0px);
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;height:100%;background:var(--bg);overscroll-behavior:none;}
-  body{
-    font-family:'Inter',sans-serif;
-    color:var(--text);
-    display:flex;
-    justify-content:center;
-  }
-  #app{
-    width:100%;
-    max-width:520px;
-    min-height:100vh;
-    padding-top:calc(var(--safe-top) + 14px);
-    padding-bottom:calc(var(--safe-bottom) + 90px);
-    position:relative;
-  }
-  .display{font-family:'Oswald',sans-serif;}
-  .mono{font-family:'IBM Plex Mono',monospace;}
+:root{
+  --nuit:#191221;
+  --nuit-2:#241A30;
+  --nuit-3:#2E2240;
+  --bord:#3A2C4A;
+  --ivoire:#F2ECE4;
+  --brume:#9A8CAC;
+  --beurre:#F5C24C;
+  --rose:#E4738F;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;min-width:0}
+html{
+  background:var(--nuit);color:var(--ivoire);
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+body{
+  font-family:"Instrument Sans",system-ui,sans-serif;
+  font-size:15px;line-height:1.45;
+  padding-bottom:calc(76px + var(--safe-b));
+  overflow-x:hidden;                         /* rien ne dépasse latéralement */
+  overscroll-behavior:none;                  /* pas de rebond horizontal ni de pull-to-refresh */
+}
+/* touch-action:manipulation sur html/body coupe le scroll sur Android Chrome.
+   On le pose uniquement sur les zones cliquables — qui gardent le bénéfice
+   iOS de couper le double-tap zoom. */
+button,a,input,select,.tuile,.ep,.ligne{touch-action:manipulation}
+img,svg{max-width:100%}
+h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.02em;line-height:1.05}
+.mono{font-family:"IBM Plex Mono",monospace}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select{font:inherit;font-size:16px;color:var(--ivoire);background:var(--nuit-2);border:1px solid var(--bord);border-radius:10px;padding:11px 13px;width:100%}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--beurre);outline-offset:2px}
+input::placeholder{color:var(--brume)}
 
-  header{
-    padding:0 20px 16px 20px;
-    border-bottom:1px solid var(--line);
-    margin-bottom:18px;
-  }
-  .eyebrow{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    letter-spacing:0.14em;
-    color:var(--accent);
-    text-transform:uppercase;
-    margin-bottom:6px;
-  }
-  h1{
-    font-family:'Oswald',sans-serif;
-    font-size:30px;
-    font-weight:600;
-    letter-spacing:0.01em;
-    margin:0 0 4px 0;
-    text-transform:uppercase;
-  }
-  .subline{color:var(--text-dim); font-size:13px;}
+header{
+  position:sticky;top:0;z-index:20;background:rgba(25,18,33,.92);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--bord);
+  padding:calc(var(--safe-t) + 18px) 20px 14px;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+}
+header h1{font-size:27px;font-weight:800}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brume);font-weight:600}
+main{padding:18px 20px 20px;max-width:720px;margin:0 auto}
 
-  .tabs{
-    display:flex;
-    gap:6px;
-    padding:0 20px;
-    margin-bottom:18px;
-  }
-  .tab-btn{
-    flex:1;
-    background:none;
-    border:1px solid var(--line);
-    color:var(--text-dim);
-    padding:10px 0;
-    border-radius:8px;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:10.5px;
-    letter-spacing:0.03em;
-    text-transform:uppercase;
-  }
-  .tab-btn.active{
-    background:var(--accent);
-    border-color:var(--accent);
-    color:#1a1610;
-    font-weight:600;
-  }
+nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:30;
+  background:var(--nuit);
+  border-top:1px solid var(--bord);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  padding-bottom:var(--safe-b);
+}
+nav button{padding:11px 2px 13px;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--brume);font-size:9.5px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--beurre)}
 
-  main{padding:0 20px;}
+.card{background:var(--nuit-2);border:1px solid var(--bord);border-radius:16px;overflow:hidden}
+.row{display:flex;gap:14px;align-items:stretch}
+.poster{width:64px;flex:0 0 64px;background:var(--nuit-3);background-size:cover;background-position:center;border-radius:10px;display:grid;place-items:center;font-family:"Bricolage Grotesque";font-weight:800;color:var(--brume);font-size:19px}
+.poster.wide{width:78px;flex-basis:78px}
 
-  .round-tracker{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:14px 16px;
-    margin-bottom:16px;
-  }
-  .round-label{font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em; font-family:'IBM Plex Mono',monospace;}
-  .round-pips{display:flex; gap:8px; margin-top:6px;}
-  .pip{
-    width:26px;height:26px;border-radius:50%;
-    border:2px solid var(--line);
-    display:flex;align-items:center;justify-content:center;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;color:var(--text-faint);
-  }
-  .pip.done{background:var(--teal); border-color:var(--teal); color:#0d1f1c; font-weight:600;}
-  .pip.current{border-color:var(--accent); color:var(--accent);}
+/* ---- signature : la grille d'épisodes ---- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(42px,1fr));gap:6px}
+.ep{
+  aspect-ratio:1/1;border-radius:8px;border:1px solid var(--bord);
+  background:var(--nuit-3);color:var(--brume);
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+  display:grid;place-items:center;
+  transition:transform .12s cubic-bezier(.3,1.4,.5,1),background .16s,color .16s,border-color .16s;
+}
+.ep:active{transform:scale(.88)}
+.ep.vu{background:var(--beurre);color:#2A1D07;border-color:var(--beurre)}
+.ep.suivant{border-color:var(--beurre);color:var(--beurre);box-shadow:inset 0 0 0 1px var(--beurre)}
+@media (prefers-reduced-motion:reduce){.ep{transition:none}.ep:active{transform:none}}
 
-  .exercise{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:16px;
-    margin-bottom:12px;
-    transition:border-color .2s;
-  }
-  .exercise.completed{border-color:var(--teal);}
-  .ex-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:10px;
-  }
-  .ex-num{
-    font-family:'IBM Plex Mono',monospace;
-    color:var(--text-faint);
-    font-size:12px;
-    margin-bottom:2px;
-  }
-  .ex-name{
-    font-family:'Oswald',sans-serif;
-    font-size:19px;
-    font-weight:500;
-    text-transform:uppercase;
-    letter-spacing:0.01em;
-  }
-  .ex-target{color:var(--text-dim); font-size:12.5px; margin-top:2px;}
-  .ex-variant{
-    color:var(--accent);
-    font-size:13px;
-    margin-top:4px;
-    display:flex;
-    align-items:center;
-    gap:6px;
-  }
-  .lvl-badge{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:10px;
-    font-weight:600;
-    background:var(--accent-dim);
-    color:var(--text);
-    border-radius:5px;
-    padding:2px 5px;
-    letter-spacing:0.04em;
-  }
-  /* Level selector in settings */
-  .ex-level-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:8px 0 12px 50px;
-    border-bottom:1px solid var(--line);
-  }
-  .ex-level-row.hidden-row{display:none;}
-  .lvl-pips{display:flex; gap:6px;}
-  .lvl-pip{
-    width:30px;height:30px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background:var(--surface-2);
-    color:var(--text-faint);
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    padding:0;
-  }
-  .lvl-pip.active{
-    background:var(--accent);
-    border-color:var(--accent);
-    color:#1a1610;
-    font-weight:600;
-  }
-  .lvl-variant-name{
-    flex:1;
-    font-size:12px;
-    color:var(--accent);
-    min-width:0;
-  }
-  .ex-check{
-    width:34px;height:34px;min-width:34px;
-    border-radius:50%;
-    border:2px solid var(--line);
-    background:none;
-    color:var(--text-faint);
-    display:flex;align-items:center;justify-content:center;
-    font-size:16px;
-  }
-  .exercise.completed .ex-check{
-    background:var(--teal); border-color:var(--teal); color:#0d1f1c;
-  }
-  .ex-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-top:14px;
-  }
-  .reps-input{
-    flex:1;
-    background:var(--surface-2);
-    border:1px solid var(--line);
-    border-radius:10px;
-    color:var(--text);
-    font-family:'IBM Plex Mono',monospace;
-    font-size:18px;
-    text-align:center;
-    padding:10px 0;
-    -moz-appearance:textfield;
-  }
-  .reps-input::-webkit-outer-spin-button,
-  .reps-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
-  .reps-input:focus{outline:none; border-color:var(--accent);}
-  .stepper{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-  }
-  .stepper button{
-    width:34px;height:26px;
-    background:var(--surface-2);
-    border:1px solid var(--line);
-    color:var(--text-dim);
-    border-radius:6px;
-    font-size:13px;
-  }
-  .validate-btn{
-    width:100%;
-    margin-top:12px;
-    padding:11px 0;
-    border-radius:10px;
-    border:none;
-    background:var(--surface-3);
-    color:var(--text);
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12.5px;
-    letter-spacing:0.06em;
-    text-transform:uppercase;
-  }
-  .exercise.completed .validate-btn{
-    background:var(--accent);
-    color:#1a1610;
-    font-weight:600;
-  }
+/* ---- cartes Découverte ---- */
+.cartes{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:13px}
+.cartes.trois{grid-template-columns:repeat(3,1fr)}
+.tuile .coche{position:absolute;right:6px;bottom:6px;width:29px;height:29px;border-radius:50%;background:var(--beurre);display:grid;place-items:center;box-shadow:0 2px 9px rgba(0,0,0,.55)}
+.tuile .coche svg{width:15px;height:15px;stroke:#2A1D07;fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.tuile{text-align:left;display:flex;flex-direction:column;gap:7px;min-width:0}
+.tuile .aff{position:relative;aspect-ratio:2/3;border-radius:11px;background:var(--nuit-3);background-size:cover;background-position:center;border:1px solid var(--bord);display:grid;place-items:center;font-family:"Bricolage Grotesque";font-weight:800;color:var(--brume);overflow:hidden}
+.tuile .plus{position:absolute;right:6px;bottom:6px;width:28px;height:28px;border-radius:50%;background:var(--beurre);color:#2A1D07;display:grid;place-items:center;font-size:19px;font-family:"Bricolage Grotesque";font-weight:600;box-shadow:0 2px 9px rgba(0,0,0,.5)}
+.tuile .masquer{position:absolute;right:6px;top:6px;width:24px;height:24px;border-radius:50%;background:rgba(25,18,33,.85);border:1px solid var(--bord);color:var(--ivoire);font-size:16px;line-height:1;display:grid;place-items:center;font-weight:600}
+.tuile .masquer:active{background:var(--nuit-3)}
+.tuile .pastille-sortie{position:absolute;left:6px;right:6px;bottom:6px;background:rgba(25,18,33,.9);border:1px solid var(--beurre);color:var(--beurre);font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;letter-spacing:.02em;padding:4px 6px;border-radius:6px;text-align:center;text-transform:uppercase}
 
-  .finish-btn{
-    width:100%;
-    padding:16px 0;
-    margin-top:8px;
-    border-radius:12px;
-    border:1px solid var(--accent);
-    background:transparent;
-    color:var(--accent);
-    font-family:'Oswald',sans-serif;
-    font-size:16px;
-    letter-spacing:0.04em;
-    text-transform:uppercase;
-  }
-  .finish-btn.ready{
-    background:var(--accent);
-    color:#1a1610;
-    font-weight:600;
-  }
-  .finish-btn.subtle{
-    border-color:var(--line);
-    color:var(--text-dim);
-    font-size:14px;
-    padding:12px 0;
-  }
+/* ---- rail des personnes (recherche) ---- */
+.pers{flex:0 0 82px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:0}
+.pers-photo{width:78px;height:78px;border-radius:50%;background-color:var(--nuit-3);background-size:cover;background-position:center;border:1px solid var(--bord)}
+.pers-nom{font-size:12.5px;font-weight:600;line-height:1.2;color:var(--ivoire);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pers-role{font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--brume);letter-spacing:.03em}
+.pers:active .pers-photo{transform:scale(.94);transition:transform .12s}
+.tuile .marque{position:absolute;left:6px;top:6px;font-family:"IBM Plex Mono",monospace;font-size:9px;font-weight:600;letter-spacing:.06em;padding:2px 6px;border-radius:999px;background:rgba(25,18,33,.85);color:var(--ivoire);border:1px solid var(--bord)}
+.tuile .nom{font-size:13px;font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tuile .pq{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--brume);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tuile.dedans .aff{opacity:.32}
+.tuile:active .aff{transform:scale(.97)}
+/* ---- accordéon de l'historique ---- */
+.ligne{display:flex;align-items:center;gap:10px;width:100%;padding:13px 14px;text-align:left}
+.ligne.sous{padding:9px 0;border-top:1px solid var(--bord)}
+.chev{stroke:var(--brume);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s ease}
+.chev.on{transform:rotate(90deg);stroke:var(--beurre)}
+@media (prefers-reduced-motion:reduce){.chev{transition:none}}
+.chip{font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:999px;border:1px solid var(--bord);color:var(--brume)}
+.chip.on{background:var(--nuit-3);color:var(--beurre);border-color:var(--beurre)}
+.pill{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--bord);color:var(--brume)}
+.bar{height:3px;background:var(--nuit-3);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--beurre);border-radius:999px}
+.vide{text-align:center;padding:52px 22px;color:var(--brume)}
+.vide h3{font-size:19px;color:var(--ivoire);margin-bottom:7px;font-weight:600}
 
-  .rest-overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(21,20,26,0.97);
-    backdrop-filter:blur(6px);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    z-index:50;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .25s;
-    padding:20px;
-  }
-  .rest-overlay.show{opacity:1; pointer-events:auto;}
-  .rest-label{
-    font-family:'IBM Plex Mono',monospace;
-    color:var(--accent);
-    letter-spacing:0.16em;
-    text-transform:uppercase;
-    font-size:12px;
-    margin-bottom:6px;
-  }
-  .rest-next{color:var(--text-dim); font-size:14px; margin-bottom:28px; text-align:center;}
-  .timer-wrap{position:relative; width:min(72vw,280px); height:min(72vw,280px);}
-  .timer-wrap svg{width:100%; height:100%; transform:rotate(-90deg);}
-  .timer-track{fill:none; stroke:var(--line); stroke-width:8;}
-  .timer-fill{fill:none; stroke:var(--accent); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 1s linear;}
-  .timer-center{
-    position:absolute; inset:0;
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-  }
-  .timer-num{font-family:'IBM Plex Mono',monospace; font-size:56px; font-weight:600; color:var(--text);}
-  .timer-sub{color:var(--text-faint); font-size:11px; letter-spacing:0.1em; text-transform:uppercase; margin-top:4px;}
-  .rest-controls{
-    display:flex;
-    gap:12px;
-    margin-top:32px;
-  }
-  .rest-controls button{
-    padding:12px 18px;
-    border-radius:10px;
-    border:1px solid var(--line);
-    background:var(--surface-2);
-    color:var(--text);
-    font-family:'IBM Plex Mono',monospace;
-    font-size:13px;
-  }
-  .rest-skip{
-    margin-top:18px;
-    background:none; border:none;
-    color:var(--text-dim);
-    font-size:13px;
-    text-decoration:underline;
-  }
+.fab{
+  position:fixed;right:18px;bottom:calc(88px + var(--safe-b));z-index:25;
+  width:54px;height:54px;border-radius:50%;background:var(--beurre);color:#2A1D07;
+  font-size:29px;line-height:1;display:grid;place-items:center;
+  box-shadow:0 6px 22px rgba(0,0,0,.5);font-family:"Bricolage Grotesque";font-weight:600;
+}
+.btn{background:var(--beurre);color:#2A1D07;border-radius:10px;padding:11px 16px;font-weight:600;text-align:center}
+.btn.ghost{background:transparent;border:1px solid var(--bord);color:var(--ivoire)}
+.btn.danger{background:transparent;border:1px solid var(--rose);color:var(--rose)}
 
-  .hist-session{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:16px;
-    margin-bottom:12px;
-  }
-  .hist-date{font-family:'Oswald',sans-serif; font-size:17px; text-transform:uppercase;}
-  .hist-meta{color:var(--text-dim); font-size:12.5px; margin-top:2px; margin-bottom:10px;}
-  .hist-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 14px;}
-  .hist-ex{display:flex; justify-content:space-between; font-size:12.5px; color:var(--text-dim); border-bottom:1px dashed var(--line); padding-bottom:4px;}
-  .hist-ex b{color:var(--text); font-weight:500;}
-  .empty-state{
-    text-align:center;
-    padding:60px 20px;
-    color:var(--text-faint);
-  }
-  .empty-state .ico{font-size:36px; margin-bottom:12px; opacity:0.5;}
-
-  .settings-card{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:16px;
-    margin-bottom:16px;
-  }
-  .settings-title{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    color:var(--text-faint);
-    margin-bottom:8px;
-  }
-  .settings-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:10px 0;
-    border-bottom:1px solid var(--line);
-  }
-  .settings-row:last-child{border-bottom:none;}
-  .settings-row span{font-size:13.5px; color:var(--text-dim);}
-  .settings-stepper{display:flex; align-items:center; gap:10px;}
-  .settings-stepper button{
-    width:28px;height:28px;border-radius:6px;
-    background:var(--surface-2); border:1px solid var(--line); color:var(--text);
-  }
-  .settings-stepper .val{font-family:'IBM Plex Mono',monospace; min-width:40px; text-align:center; font-size:14px;}
-
-  /* Exercise editor */
-  .ex-edit-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:10px 0;
-    border-bottom:1px solid var(--line);
-  }
-  .ex-edit-row:last-child{border-bottom:none;}
-  .ex-edit-row.off .ex-edit-name{color:var(--text-faint); text-decoration:line-through;}
-  .ex-toggle{
-    width:40px;height:24px;min-width:40px;
-    border-radius:12px;
-    border:1px solid var(--line);
-    background:var(--surface-2);
-    position:relative;
-    padding:0;
-  }
-  .ex-toggle::after{
-    content:'';
-    position:absolute;
-    top:2px; left:2px;
-    width:18px;height:18px;
-    border-radius:50%;
-    background:var(--text-faint);
-    transition:left .15s, background .15s;
-  }
-  .ex-toggle.on{background:var(--accent-dim); border-color:var(--accent);}
-  .ex-toggle.on::after{left:18px; background:var(--accent);}
-  .ex-edit-main{flex:1; min-width:0;}
-  .ex-edit-name{font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .ex-edit-target{font-size:11.5px; color:var(--text-faint);}
-  .ex-edit-actions{display:flex; gap:6px;}
-  .ex-edit-actions button{
-    width:28px;height:28px;
-    border-radius:6px;
-    background:var(--surface-2);
-    border:1px solid var(--line);
-    color:var(--text-dim);
-    font-size:12px;
-  }
-  .ex-edit-actions button.del{color:var(--danger); border-color:rgba(184,74,62,0.4);}
-  .ex-edit-actions button:disabled{opacity:0.3;}
-
-  .add-ex-form{
-    margin-top:12px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .add-ex-form input{
-    background:var(--surface-2);
-    border:1px solid var(--line);
-    border-radius:8px;
-    color:var(--text);
-    font-family:'Inter',sans-serif;
-    font-size:14px;
-    padding:10px 12px;
-  }
-  .add-ex-form input:focus{outline:none; border-color:var(--accent);}
-  .add-ex-form input::placeholder{color:var(--text-faint);}
-  .add-ex-btn{
-    padding:10px 0;
-    border-radius:8px;
-    border:1px dashed var(--accent-dim);
-    background:none;
-    color:var(--accent);
-    font-family:'IBM Plex Mono',monospace;
-    font-size:12px;
-    letter-spacing:0.06em;
-    text-transform:uppercase;
-  }
-  .backup-stat{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    font-size:12.5px;
-    color:var(--text-dim);
-    padding:4px 0;
-  }
-  .backup-stat span:last-child{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11.5px;
-    color:var(--text-faint);
-  }
-  .apply-note{
-    font-size:12px;
-    color:var(--text-faint);
-    margin-top:10px;
-    line-height:1.5;
-  }
-
-  /* Tracking */
-  .track-card{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:16px;
-    margin-bottom:12px;
-  }
-  .track-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:baseline;
-    margin-bottom:4px;
-  }
-  .track-name{
-    font-family:'Oswald',sans-serif;
-    font-size:18px;
-    font-weight:500;
-    text-transform:uppercase;
-    letter-spacing:0.01em;
-  }
-  .track-delta{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:13px;
-    font-weight:600;
-  }
-  .track-delta.up{color:var(--teal);}
-  .track-delta.down{color:var(--danger);}
-  .track-delta.flat{color:var(--text-faint);}
-  .track-stats{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px 16px;
-    margin-bottom:12px;
-  }
-  .track-stat{font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.05em;}
-  .track-stat b{
-    display:block;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:16px;
-    font-weight:600;
-    color:var(--text);
-    text-transform:none;
-    letter-spacing:0;
-    margin-top:2px;
-  }
-  .track-chart{width:100%; height:auto; display:block;}
-  .track-chart .grid-line{stroke:var(--line); stroke-width:1; stroke-dasharray:2 4;}
-  .track-chart .bar{fill:var(--surface-3);}
-  .track-chart .bar.last{fill:var(--accent);}
-  .track-chart .spark{fill:none; stroke:var(--teal); stroke-width:2; stroke-linejoin:round; stroke-linecap:round;}
-  .track-chart .dot{fill:var(--teal);}
-  .track-chart .dot.last{fill:var(--accent); stroke:var(--bg); stroke-width:2;}
-  .track-chart .axis-label{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:9px;
-    fill:var(--text-faint);
-  }
-  .track-chart .val-label{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:10px;
-    fill:var(--text-dim);
-    text-anchor:middle;
-  }
-  .track-chart .val-label.last{fill:var(--accent); font-weight:600;}
-  .track-note{
-    font-size:11.5px;
-    color:var(--text-faint);
-    margin-top:8px;
-  }
-
-  .group-header{
-    font-family:'Oswald',sans-serif;
-    font-size:13px;
-    font-weight:600;
-    text-transform:uppercase;
-    letter-spacing:0.08em;
-    color:var(--accent);
-    margin:14px 0 4px 0;
-    padding-bottom:5px;
-    border-bottom:1px solid var(--accent-dim);
-  }
-  .group-header:first-of-type{margin-top:4px;}
-  .group-select{
-    background:var(--surface-2);
-    border:1px solid var(--line);
-    border-radius:8px;
-    color:var(--text);
-    font-family:'Inter',sans-serif;
-    font-size:14px;
-    padding:10px 12px;
-    -webkit-appearance:none;
-    appearance:none;
-  }
-  .group-select:focus{outline:none; border-color:var(--accent);}
-
-  .toast{
-    position:fixed;
-    bottom:calc(var(--safe-bottom) + 20px);
-    left:50%;
-    transform:translateX(-50%);
-    background:var(--surface-3);
-    border:1px solid var(--line);
-    color:var(--text);
-    padding:10px 18px;
-    border-radius:10px;
-    font-size:13px;
-    opacity:0;
-    transition:opacity .3s, transform .3s;
-    z-index:60;
-    pointer-events:none;
-  }
-  .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(12,8,17,.78);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
+.sheet > div{position:relative;background:var(--nuit-2);border:1px solid var(--bord);border-bottom:none;border-radius:20px 20px 0 0;width:100%;max-width:720px;max-height:88vh;overflow-y:auto;padding:20px 20px calc(28px + var(--safe-b))}
+.fermer-x{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;background:var(--nuit-3);border:1px solid var(--bord);color:var(--ivoire);font-size:19px;line-height:1;display:grid;place-items:center;z-index:5}
+.attente{opacity:.58}
+.poignee{width:38px;height:4px;background:var(--bord);border-radius:99px;margin:0 auto 16px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(94px + var(--safe-b));z-index:60;background:var(--ivoire);color:var(--nuit);padding:10px 16px;border-radius:99px;font-size:13.5px;font-weight:600;box-shadow:0 6px 22px rgba(0,0,0,.4)}
+.spin{width:17px;height:17px;border:2px solid var(--bord);border-top-color:var(--beurre);border-radius:50%;animation:s .7s linear infinite;display:inline-block}
+@keyframes s{to{transform:rotate(360deg)}}
+.err{color:var(--rose);font-size:13.5px}
 </style>
 </head>
 <body>
-<div id="app">
 
-  <header>
-    <div class="eyebrow" id="dateLine">—</div>
-    <h1>Full Body</h1>
-    <div class="subline">Circuit poids du corps · barre de traction</div>
-  </header>
-
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="seance">Séance</button>
-    <button class="tab-btn" data-tab="tracking">Tracking</button>
-    <button class="tab-btn" data-tab="historique">Journal</button>
-    <button class="tab-btn" data-tab="reglages">Réglages</button>
+<header>
+  <div>
+    <div class="eyebrow" id="eyebrow">Suivi</div>
+    <h1 id="titre">Séries</h1>
   </div>
+  <div class="mono" id="compteur" style="font-size:12px;color:var(--brume)"></div>
+</header>
 
-  <main id="main"></main>
-</div>
+<main id="vue"></main>
+<button class="fab" id="fab" aria-label="Ajouter">+</button>
 
-<div class="rest-overlay" id="restOverlay">
-  <div class="rest-label">Repos</div>
-  <div class="rest-next" id="restNext">Prochain : —</div>
-  <div class="timer-wrap">
-    <svg viewBox="0 0 100 100">
-      <circle class="timer-track" cx="50" cy="50" r="45"></circle>
-      <circle class="timer-fill" id="timerFill" cx="50" cy="50" r="45"
-        stroke-dasharray="282.7" stroke-dashoffset="0"></circle>
-    </svg>
-    <div class="timer-center">
-      <div class="timer-num" id="timerNum">1:15</div>
-      <div class="timer-sub">restant</div>
-    </div>
-  </div>
-  <div class="rest-controls">
-    <button id="restMinus">−15s</button>
-    <button id="restPlus">+15s</button>
-  </div>
-  <button class="rest-skip" id="restSkip">Passer le repos</button>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<audio id="keepAliveAudio" loop playsinline style="display:none;"></audio>
+<nav id="nav"></nav>
 
 <script>
-(function(){
-  "use strict";
+"use strict";
 
-  // ---------- Keep-alive silent audio (best-effort, foreground/background only) ----------
-  // This does NOT work while the phone is locked — iOS suspends web app
-  // execution entirely when the screen locks. Kept here only to reduce
-  // throttling while the app is merely backgrounded (tab switched, etc.).
-  const SILENCE_WAV_B64 = "UklGRqQ+AABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YYA+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+/* ============ état ============ */
+const CLE = "suivi:v1";
+let D = { series: [], films: [], tmdb: "", masques: { series: [], films: [] } };
+let page = "series";
+let histOnglet = "series";
+let histSerieOuv = new Set();   // séries dépliées dans l'historique
+let histSaisonOuv = new Set();  // saisons dépliées, clé "idSerie:n"
+let histFilmTri = "sortie";   // "vu" ou "sortie"
+let histSerieTri = "vu";      // "vu" ou "sortie"
+let decOnglet = "series";   // series | films
+let decFiltre = "pourtoi";  // moment | avenir | top | pourtoi
+let decCache = {};          // indexé par "onglet:filtre"
+let decQ = "";              // recherche en cours dans Découverte
+let decTimer;
+let ouvert = null;
 
-  // ---------- Screen wake lock ----------
-  // Keeps the screen from auto-locking while the app is open and in the
-  // foreground. Supported in Safari on iOS 16.4+; older versions simply
-  // won't get this (silently — no error shown to the user). This also
-  // sidesteps the background/lock sound limitation noted earlier: if the
-  // screen never locks during a session, the rest timer's beep keeps
-  // working normally since the app stays in the foreground.
-  let wakeLock = null;
+function charger(){
+  try{ const b = localStorage.getItem(CLE); if(b) D = Object.assign(D, JSON.parse(b)); }
+  catch(e){ console.warn("Lecture impossible", e); }
+  // rétrocompatibilité pour les installations antérieures aux masques
+  D.masques = D.masques || {};
+  D.masques.series = D.masques.series || [];
+  D.masques.films  = D.masques.films  || [];
+}
+function sauver(){
+  try{ localStorage.setItem(CLE, JSON.stringify(D)); }
+  catch(e){ toast("Sauvegarde impossible — stockage plein ?"); }
+}
+// la liste a changé : les suggestions doivent être recalculées
+function invaliderSuggestions(){ decCache = {}; }
+const uid = () => Math.random().toString(36).slice(2,10);
+const img = p => p ? "https://image.tmdb.org/t/p/w185"+p : null;
+const init = t => t.replace(/[^A-Za-zÀ-ÿ0-9 ]/g,"").split(/\s+/).filter(Boolean).slice(0,2).map(m=>m[0].toUpperCase()).join("");
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dateFr = iso => new Date(iso).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"});
 
-  async function requestWakeLock(){
-    if(!('wakeLock' in navigator)) return;
+/* ============ logique séries ============ */
+const cle = (s,e) => s+"x"+e;
+function totalEp(s){ return s.saisons.reduce((a,x)=>a+x.episodes.length,0); }
+function nbVus(s){ return Object.keys(s.vus||{}).length; }
+function fini(s){ const t=totalEp(s); return t>0 && nbVus(s)>=t; }
+function suivant(s){
+  for(const sa of s.saisons)
+    for(const ep of sa.episodes)
+      if(!s.vus[cle(sa.n,ep.n)]) return {saison:sa.n, ...ep};
+  return null;
+}
+// date la plus récente d'un visionnage de la série, ou date d'ajout si rien de vu
+function derniereActivite(s){
+  let max = s.ajoute || "";
+  for(const d of Object.values(s.vus||{})) if(d > max) max = d;
+  return max;
+}
+// un épisode dont la date de diffusion est dans le futur. On tolère un jour de battement
+// pour couvrir les décalages horaires France/US.
+function epFutur(ep){
+  if(!ep?.date) return false;
+  const sortie = new Date(ep.date+"T00:00");
+  return sortie.getTime() > Date.now() + 24*3600*1000;
+}
+function dateEp(iso){
+  return new Date(iso+"T00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"});
+}
+// même logique que epFutur, appliquée aux films (qui ont maintenant f.date aussi)
+function filmFutur(f){ return epFutur(f); }
+
+// Format années · mois · jours · heures. Fallback à minutes en dessous d'une heure.
+// Mois = 30 jours et année = 12 mois : les moyennes plus précises (30.44, 365.25)
+// donnent des chiffres exacts mais illisibles ("2 mois · 29 j · 18 h" au lieu de "3 mois").
+function dureeAffichee(min){
+  if(min <= 0) return "";
+  if(min < 60) return min + " min";
+  const H=60, J=24*H, M=30*J, AN=12*M;
+  let r = min;
+  const an = Math.floor(r/AN);   r -= an*AN;
+  const mois = Math.floor(r/M);  r -= mois*M;
+  const j = Math.floor(r/J);     r -= j*J;
+  const h = Math.floor(r/H);
+  const parts = [];
+  if(an)   parts.push(an+" an"+(an>1?"s":""));
+  if(mois) parts.push(mois+" mois");
+  if(j)    parts.push(j+" j");
+  if(h)    parts.push(h+" h");
+  return parts.join(" · ");
+}
+
+// Temps de visionnage d'une série : somme des durées des épisodes vus.
+// TMDB ne connaît pas toujours la durée épisode par épisode : à défaut, 42 min
+// (moyenne des séries scriptées TV).
+function totalMinSerie(s){
+  let t = 0;
+  for(const sa of s.saisons)
+    for(const ep of sa.episodes)
+      if(s.vus[cle(sa.n,ep.n)]) t += ep.duree || 42;
+  return t;
+}
+function marquer(s, sn, en, val){
+  const k = cle(sn,en);
+  if(val) s.vus[k] = new Date().toISOString();
+  else delete s.vus[k];
+  sauver();
+}
+
+/* ============ TMDB ============ */
+const aCle = () => !!(D.tmdb && D.tmdb.trim());
+async function tmdb(chemin, params={}){
+  const u = new URL("https://api.themoviedb.org/3"+chemin);
+  u.searchParams.set("api_key", D.tmdb.trim());
+  u.searchParams.set("language","en-US");
+  for(const [k,v] of Object.entries(params)) u.searchParams.set(k,v);
+  const r = await fetch(u);
+  if(r.status===401) throw new Error("Clé TMDB refusée. Vérifie-la dans Réglages.");
+  if(!r.ok) throw new Error("TMDB n'a pas répondu (erreur "+r.status+").");
+  return r.json();
+}
+async function chercher(q, type){
+  const d = await tmdb("/search/"+(type==="series"?"tv":"movie"), {query:q, include_adult:"false"});
+  return (d.results||[]).slice(0,8).map(r=>({
+    tmdbId:r.id,
+    titre:r.name||r.title,
+    annee:(r.first_air_date||r.release_date||"").slice(0,4),
+    poster:r.poster_path,
+  }));
+}
+async function importerSerie(id){
+  const d = await tmdb("/tv/"+id);
+  const utiles = (d.seasons||[]).filter(s=>s.season_number>0 && s.episode_count>0);
+  const saisons = await Promise.all(utiles.map(async s=>{
     try{
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; });
+      const sd = await tmdb("/tv/"+id+"/season/"+s.season_number);
+      return { n:s.season_number, episodes:(sd.episodes||[]).map(e=>({n:e.episode_number, titre:e.name||"", duree:e.runtime||null, date:e.air_date||null})) };
     }catch(e){
-      // Can fail if the tab isn't visible or the user hasn't interacted yet —
-      // harmless, we just retry on the next visibility change / tap.
+      return { n:s.season_number, episodes:Array.from({length:s.episode_count},(_,i)=>({n:i+1, titre:"", duree:null, date:null})) };
     }
-  }
+  }));
+  return { id:uid(), tmdbId:id, titre:d.name, annee:(d.first_air_date||"").slice(0,4), poster:d.poster_path, saisons:saisons.sort((a,b)=>a.n-b.n), vus:{}, ajoute:new Date().toISOString() };
+}
+async function importerFilm(id){
+  const d = await tmdb("/movie/"+id);
+  return { id:uid(), tmdbId:id, titre:d.title, annee:(d.release_date||"").slice(0,4), poster:d.poster_path, duree:d.runtime||null, date:d.release_date||null, vuLe:null, ajoute:new Date().toISOString() };
+}
 
-  document.addEventListener('visibilitychange', () => {
-    if(document.visibilityState === 'visible'){
-      requestWakeLock();
+/* ============ découverte ============ */
+const dansMaListe = (id,type) => type==="series" ? D.series.some(s=>s.tmdbId===id) : D.films.some(f=>f.tmdbId===id);
+// écarté à l'affichage et au chargement : ce que l'utilisatrice a masqué avec le "−"
+const estMasque = (id,type) => D.masques[type].includes(id);
+// écarté = déjà suivi OU masqué : les deux se comportent pareil pour les grilles
+const ecarte = (id,type) => dansMaListe(id,type) || estMasque(id,type);
+const versTuile = (r,type) => ({
+  tmdbId:r.id, type,
+  titre:r.name||r.title,
+  annee:(r.first_air_date||r.release_date||"").slice(0,4),
+  poster:r.poster_path,
+  note:r.vote_average||0,
+  votes:r.vote_count||0,
+});
+
+async function chercherTuiles(q){
+  const [s,f,p] = await Promise.all([
+    tmdb("/search/tv",     {query:q, include_adult:"false"}).catch(()=>({results:[]})),
+    tmdb("/search/movie",  {query:q, include_adult:"false"}).catch(()=>({results:[]})),
+    tmdb("/search/person", {query:q, include_adult:"false"}).catch(()=>({results:[]})),
+  ]);
+  const roleFr = d => d==="Directing" ? "Réalisation"
+                    : d==="Acting"    ? "Interprétation"
+                    : d==="Writing"   ? "Écriture"
+                    : d==="Production"? "Production"
+                    : d || "";
+  return {
+    series:(s.results||[]).map(r=>versTuile(r,"series")).filter(x=>x.titre),
+    films: (f.results||[]).map(r=>versTuile(r,"films")).filter(x=>x.titre),
+    // On garde les personnes populaires qui ont au moins une œuvre connue.
+    // Sans "known_for", TMDB retourne parfois des homonymes vides — inutiles ici.
+    personnes: (p.results||[])
+      .filter(r => r.known_for?.length && r.profile_path)
+      .slice(0,4)
+      .map(r=>({
+        tmdbId: r.id,
+        nom: r.name,
+        role: roleFr(r.known_for_department),
+        photo: r.profile_path,
+      })),
+  };
+}
+
+// Endpoints TMDB pour chaque paire (onglet, filtre).
+// Les paramètres dynamiques (dates) sont générés à l'appel, pas au chargement du fichier.
+const ENDPOINTS = {
+  series: {
+    moment: () => ["/tv/on_the_air", {}],
+    avenir: () => ["/discover/tv", {
+      "first_air_date.gte": new Date().toISOString().slice(0,10),
+      "sort_by": "popularity.desc",
+    }],
+    top:    () => ["/tv/top_rated", {}],
+  },
+  films: {
+    moment: () => ["/movie/now_playing", {}],
+    avenir: () => ["/movie/upcoming", {}],
+    top:    () => ["/movie/top_rated", {}],
+  },
+};
+
+async function chargerFiltre(onglet, filtre){
+  if(filtre === "pourtoi") return await pourToiFiltre(onglet);
+  const [chemin, params] = ENDPOINTS[onglet][filtre]();
+  const items = [];
+  // On pagine pour avoir de quoi remplir la grille même après avoir retiré
+  // les titres déjà dans la liste. Trois pages suffisent en pratique.
+  for(let p=1; p<=3; p++){
+    let d;
+    try{ d = await tmdb(chemin, {page:String(p), ...params}); }
+    catch(e){ if(p===1) throw e; break; }
+    for(const r of (d.results||[])){
+      const t = versTuile(r, onglet);
+      if(ecarte(t.tmdbId, onglet)) continue;
+      items.push(t);
     }
-  });
-  // A wake lock request must follow user activation on some browsers —
-  // piggyback on the same first-tap listener used to unlock audio.
-  ['touchstart','click'].forEach(evt=>{
-    document.addEventListener(evt, requestWakeLock, { passive:true });
-  });
-  requestWakeLock();
-
-  // ---------- Storage shim ----------
-  // window.storage (get/set/delete/list) is only available inside the Claude.ai
-  // artifact preview environment. Once this app runs as a real hosted site
-  // (e.g. GitHub Pages), that API doesn't exist — so we provide a drop-in
-  // replacement backed by the browser's own localStorage. This persists
-  // correctly on iPhone, including when launched from the Home Screen icon.
-  if(!window.storage){
-    window.storage = {
-      async get(key){
-        try{
-          const v = localStorage.getItem(key);
-          if(v === null) return null;
-          return { key, value: v };
-        }catch(e){ return null; }
-      },
-      async set(key, value){
-        try{
-          localStorage.setItem(key, value);
-          return { key, value };
-        }catch(e){ console.error('storage.set failed', e); return null; }
-      },
-      async delete(key){
-        try{
-          localStorage.removeItem(key);
-          return { key, deleted:true };
-        }catch(e){ return null; }
-      },
-      async list(prefix){
-        try{
-          const keys = [];
-          for(let i=0;i<localStorage.length;i++){
-            const k = localStorage.key(i);
-            if(!prefix || (k && k.startsWith(prefix))) keys.push(k);
-          }
-          return { keys };
-        }catch(e){ return null; }
-      }
-    };
+    if(items.length >= 24) break;
+    if(!(d.results||[]).length) break;
   }
+  return { items: items.slice(0,24) };
+}
 
-  // ---------- Default exercise library ----------
-  // Each exercise has 5 progression variants; `level` (1–5) selects the active one.
-  // Progression v2: recalibrated upward — starts at intermediate variants.
-  const PROGRESSION_VERSION = 4;
-  const MUSCLE_GROUPS = [
-    { id:'dos', label:'Dos' },
-    { id:'pectoraux', label:'Pectoraux' },
-    { id:'epaules', label:'Épaules' },
-    { id:'bras', label:'Bras' },
-    { id:'jambes', label:'Jambes' },
-    { id:'abdos', label:'Abdos / Gainage' },
-    { id:'autre', label:'Autre' }
+// Recommandations basées sur les titres de la liste, filtrées par type.
+async function pourToiFiltre(onglet){
+  const sources = onglet === "series"
+    ? D.series.filter(s=>s.tmdbId).map(s=>({id:s.tmdbId, titre:s.titre, poids:nbVus(s)>0?2:1}))
+    : D.films.filter(f=>f.tmdbId).map(f=>({id:f.tmdbId, titre:f.titre, poids:f.vuLe?2:1}));
+  if(!sources.length) return { vide:true, items:[] };
+  const choix = sources.sort((a,b)=>b.poids-a.poids).slice(0,8);
+  const type = onglet === "series" ? "tv" : "movie";
+  const lots = await Promise.all(choix.map(async src=>{
+    try{
+      const d = await tmdb("/"+type+"/"+src.id+"/recommendations");
+      return (d.results||[]).slice(0,12).map(r=>({ t:versTuile(r,onglet), pq:src.titre, poids:src.poids }));
+    }catch(e){ return []; }
+  }));
+  const tally = new Map();
+  for(const lot of lots) for(const {t,pq,poids} of lot){
+    if(ecarte(t.tmdbId, onglet)) continue;
+    if(t.votes < 40) continue;
+    const k = t.tmdbId;
+    const e = tally.get(k) || { ...t, score:0, raisons:[] };
+    e.score += poids;
+    if(!e.raisons.includes(pq)) e.raisons.push(pq);
+    tally.set(k,e);
+  }
+  const items = [...tally.values()].sort((a,b)=> b.score-a.score || b.note-a.note).slice(0,24);
+  return { vide:false, items };
+}
+
+/* ============ rendu ============ */
+const $ = s => document.querySelector(s);
+function rendre(){
+  // remplacer le contenu remet la page en haut : on repose le lecteur où il était.
+  // Changer d'onglet remonte volontairement, via window.scrollTo dans le gestionnaire.
+  const sy = window.scrollY;
+  const meta = {
+    series:  ["Suivi", "Séries",     D.series.filter(s=>!fini(s)).length + " en cours"],
+    films:   ["Suivi", "Films",      D.films.filter(f=>!f.vuLe).length + " à voir"],
+    decouv:  ["Suivi", "Découverte", ""],
+    hist:    ["Suivi", "Historique", ""],
+    reglages:["Suivi", "Réglages",   ""],
+  }[page];
+  $("#eyebrow").textContent = meta[0];
+  $("#titre").textContent = meta[1];
+  $("#compteur").textContent = meta[2];
+  $("#fab").style.display = (page==="series"||page==="films") ? "grid" : "none";
+  $("#vue").innerHTML = { series:vueSeries, films:vueFilms, decouv:vueDecouv, hist:vueHist, reglages:vueReglages }[page]();
+  rendreNav();
+  window.scrollTo(0, sy);
+  if(page==="decouv") chargerDecouv();
+}
+function rendreNav(){
+  const items = [
+    ["series","Séries",'<path d="M3 7h18v13H3z"/><path d="m8 3 4 4 4-4"/>'],
+    ["films","Films",'<path d="M3 4h18v16H3z"/><path d="M7 4v16M17 4v16M3 12h18"/>'],
+    ["decouv","Découverte",'<circle cx="12" cy="12" r="9"/><path d="m15.2 8.8-2.1 4.4-4.3 2.1 2.1-4.4z"/>'],
+    ["hist","Historique",'<path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/>'],
+    ["reglages","Réglages",'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.6a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4z"/>'],
   ];
-  const DEFAULT_GROUPS = {
-    tractions:'dos', rowing:'dos', pompes:'pectoraux',
-    squat_bulgare:'jambes', fentes:'jambes', knee_raises:'abdos'
-  };
-  const DEFAULT_EXERCISES = [
-    { id:"tractions", name:"Tractions", group:'dos', enabled:true, level:1, pv:PROGRESSION_VERSION,
-      targetMin:8, targetMax:12, target:8, perLeg:false,
-      variants:[
-        "Tractions pronation",
-        "Tractions prise large",
-        "Tractions lestées",
-        "Tractions archer",
-        "Tractions une main (assistées)"
-      ]},
-    { id:"pompes", name:"Pompes", group:'pectoraux', enabled:true, level:1, pv:PROGRESSION_VERSION,
-      targetMin:15, targetMax:25, target:15, perLeg:false,
-      variants:[
-        "Pompes classiques",
-        "Pompes déclinées (pieds surélevés)",
-        "Pompes archer",
-        "Pompes pseudo-planche (mains reculées)",
-        "Pompes une main"
-      ]},
-    { id:"rowing", name:"Rowing inversé", group:'dos', enabled:true, level:1, pv:PROGRESSION_VERSION,
-      targetMin:12, targetMax:18, target:12, perLeg:false,
-      variants:[
-        "Rowing inversé pieds surélevés",
-        "Rowing inversé archer",
-        "Rowing inversé une main (assisté)",
-        "Rowing inversé une main strict",
-        "Rowing une main pieds surélevés"
-      ]},
-    { id:"squat_bulgare", name:"Squats unilatéraux", group:'jambes', enabled:true, level:1, pv:PROGRESSION_VERSION,
-      targetMin:10, targetMax:16, target:10, perLeg:true,
-      variants:[
-        "Squats bulgares",
-        "Squats bulgares sautés",
-        "Pistol squats",
-        "Pistol squats lestés",
-        "Pistol squats sautés"
-      ]},
-    { id:"knee_raises", name:"Abdos suspendus", group:'abdos', enabled:true, level:1, pv:PROGRESSION_VERSION,
-      targetMin:12, targetMax:18, target:12, perLeg:false,
-      variants:[
-        "Hanging knee raises",
-        "Hanging leg raises (jambes tendues)",
-        "Toes to bar",
-        "Toes to bar lestés",
-        "Essuie-glaces (windshield wipers)"
-      ]},
-    { id:"fentes", name:"Fentes", group:'jambes', enabled:true, level:1, pv:PROGRESSION_VERSION,
-      targetMin:12, targetMax:20, target:12, perLeg:true,
-      variants:[
-        "Fentes marchées",
-        "Fentes sautées",
-        "Fentes en déficit (pied avant surélevé)",
-        "Fentes en déficit sautées",
-        "Shrimp squats"
-      ]},
-    { id:"dips", name:"Dips", group:'pectoraux', enabled:true, level:1, pv:PROGRESSION_VERSION,
-      targetMin:10, targetMax:18, target:10, perLeg:false,
-      variants:[
-        "Dips stricts complets",
-        "Dips lestés (charge légère)",
-        "Dips lestés (charge modérée)",
-        "Dips lestés (charge lourde)",
-        "Dips lestés + tempo lent (3–4s excentrique)"
-      ]},
-    { id:"pike_pushups", name:"Pike push-ups", group:'epaules', enabled:true, level:1, pv:PROGRESSION_VERSION,
-      targetMin:8, targetMax:14, target:8, perLeg:false,
-      variants:[
-        "Pike push-ups (pieds au sol)",
-        "Pike push-ups pieds surélevés",
-        "Wall walks (marche murale)",
-        "Handstand push-ups assistés (amplitude partielle)",
-        "Handstand push-ups complets (mur)"
-      ]}
-  ];
+  $("#nav").innerHTML = items.map(([id,lab,path])=>
+    `<button class="${page===id?"on":""}" data-page="${id}"><svg viewBox="0 0 24 24">${path}</svg>${lab}</button>`
+  ).join("");
+}
 
-  function genericVariants(name){
-    return [1,2,3,4,5].map(n => name + " — niveau " + n);
-  }
+/* ---- page Séries : uniquement l'épisode suivant ---- */
+function vueSeries(){
+  const actives = D.series.filter(s=>!fini(s))
+    .sort((a,b)=> derniereActivite(b).localeCompare(derniereActivite(a)));
+  if(!actives.length) return vide("Aucune série en cours","Ajoute une série avec le bouton +. L'épisode suivant s'affichera ici, prêt à cocher.");
+  return actives.map(s=>{
+    const ep = suivant(s), t = totalEp(s), v = nbVus(s);
+    const p = t ? Math.round(v/t*100) : 0;
+    const code = "S"+String(ep.saison).padStart(2,"0")+"E"+String(ep.n).padStart(2,"0");
+    const futur = epFutur(ep);
+    return `<div class="card ${futur?"attente":""}" style="margin-bottom:12px;padding:14px">
+      <div class="row">
+        <div class="poster wide" data-ffiche="series:${s.id}" style="${s.poster?`background-image:url(${img(s.poster)})`:""}">${s.poster?"":esc(init(s.titre))}</div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:7px">
+          <div data-ffiche="series:${s.id}" style="min-width:0">
+            <div style="font-weight:600;font-size:16.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.titre)}</div>
+            <div class="mono" style="font-size:12.5px;color:var(--beurre);margin-top:3px">${code}</div>
+            <div style="font-size:13.5px;color:var(--brume);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(ep.titre||"Épisode "+ep.n)}</div>
+          </div>
+          <div class="bar" style="margin-top:auto"><i style="width:${p}%"></i></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="mono" style="font-size:11px;color:var(--brume);flex:1">${v}/${t}</span>
+            ${futur
+              ? `<span class="pill" style="border-color:var(--bord);color:var(--brume)">Sortie ${dateEp(ep.date)}</span>`
+              : `<button class="btn" style="padding:7px 14px;font-size:13.5px" data-vu="${s.id}">Vu</button>`}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
 
-  function clampLevel(l){
-    l = parseInt(l,10);
-    if(isNaN(l)) return 1;
-    return Math.max(1, Math.min(5, l));
-  }
+/* ---- page Films ---- */
+function vueFilms(){
+  const a = D.films.filter(f=>!f.vuLe)
+    .sort((a,b)=> (b.annee||"0").localeCompare(a.annee||"0") || a.titre.localeCompare(b.titre));
+  if(!a.length) return vide("Aucun film à voir","Ajoute un film avec le bouton +. Une fois vu, il part dans l'historique.");
+  return `<div class="cartes trois">${a.map(f=>{
+    const futur = filmFutur(f);
+    return `<div class="tuile ${futur?"attente":""}" data-ffiche="films:${f.id}">
+      <div class="aff" style="${f.poster?`background-image:url(${img(f.poster)})`:""}">
+        ${f.poster?"":esc(init(f.titre))}
+        ${futur
+          ? `<span class="pastille-sortie">Sortie ${dateEp(f.date)}</span>`
+          : `<button class="coche" data-filmvu="${f.id}" aria-label="Marquer ${esc(f.titre)} comme vu"><svg viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></svg></button>`}
+      </div>
+      <div>
+        <div class="nom">${esc(f.titre)}</div>
+        <div class="pq">${f.annee||"—"}${f.duree?" · "+f.duree+" min":""}</div>
+      </div>
+    </div>`;
+  }).join("")}</div>`;
+}
 
-  function variantOf(ex){
-    const lvl = clampLevel(ex.level);
-    if(Array.isArray(ex.variants) && ex.variants[lvl-1]) return ex.variants[lvl-1];
-    return ex.name;
-  }
+// Fiche descriptive : synopsis, acteurs, bande-annonce.
+// Ouverte au clic sur un poster/affiche depuis Séries, Films, Historique et Découverte.
+// tmdbId peut manquer (saisie manuelle) : on affiche alors juste ce qu'on a.
+async function ficheDescription(type, tmdbId, localId){
+  const liste = type==="series" ? D.series : D.films;
+  // Sans localId, on essaie quand même de retrouver l'item via son tmdbId :
+  // ainsi les tuiles Découverte qui pointent vers un titre déjà suivi
+  // ouvrent la fiche avec les bonnes actions locales.
+  const item = localId ? liste.find(x=>x.id===localId)
+                       : (tmdbId ? liste.find(x=>x.tmdbId===tmdbId) : null);
+  // Squelette immédiat + poignée : la feuille s'ouvre sans attendre le réseau
+  feuille(`<div class="poignee"></div>
+    <div id="fiche"><div style="padding:40px;text-align:center"><span class="spin"></span></div></div>`,
+    async el=>{
+      const box = el.querySelector("#fiche");
+      let d = null, cast = [], trailer = null, realisation = "";
+      if(tmdbId && aCle()){
+        try{
+          d = await tmdb("/"+(type==="series"?"tv":"movie")+"/"+tmdbId, {append_to_response:"credits,videos"});
+          cast = (d.credits?.cast||[]).slice(0,6).map(c=>c.name);
+          // Films : le réalisateur est dans crew.job === "Director".
+          // Séries : la notion équivalente est le/les créateur(s), rangés dans created_by.
+          if(type==="films"){
+            const dir = (d.credits?.crew||[]).find(c=>c.job==="Director");
+            realisation = dir?.name || "";
+          } else {
+            realisation = (d.created_by||[]).map(c=>c.name).join(", ");
+          }
+          const vids = d.videos?.results||[];
+          trailer = vids.find(v=>v.type==="Trailer" && v.site==="YouTube" && v.official)
+                 || vids.find(v=>v.type==="Trailer" && v.site==="YouTube")
+                 || vids.find(v=>v.site==="YouTube");
+        }catch(e){ /* pas grave : on affiche ce qu'on sait déjà */ }
+      }
+      // fallback sur les données stockées
+      const titre = d?.title || d?.name || item?.titre || "";
+      const annee = (d?.release_date||d?.first_air_date||"").slice(0,4) || item?.annee || "";
+      const poster = d?.poster_path || item?.poster;
+      const duree = d?.runtime || d?.episode_run_time?.[0] || item?.duree;
+      const note = d?.vote_average;
+      const overview = d?.overview || "";
+      const trailerUrl = trailer ? "https://www.youtube.com/watch?v="+trailer.key : null;
 
-  let settings = { rounds:4, restBetweenEx:75, restBetweenRounds:120 };
-  let exercises = null;      // editable library (settings tab)
-  let session = null;        // in-progress session: snapshots its own exercise list
-  let history = [];
-  let activeTab = "seance";
-  let restState = null;
-  let backupInProgress = false;
+      // Actions selon contexte : dans la liste ou pas, série ou film
+      let actions = "";
+      if(item && type==="series"){
+        actions = `<button class="btn" style="width:100%;margin-bottom:9px" data-detail="${item.id}">Voir les épisodes</button>
+                   <button class="btn danger" style="width:100%" data-supprimer="${item.id}">Retirer de ma liste</button>`;
+      } else if(item && type==="films"){
+        actions = item.vuLe
+          ? `<button class="btn ghost" style="width:100%;margin-bottom:9px" data-filmrevu="${item.id}">Remettre à voir</button>
+             <button class="btn danger" style="width:100%" data-filmsup="${item.id}">Retirer</button>`
+          : `<button class="btn" style="width:100%;margin-bottom:9px" data-filmvu="${item.id}">Marquer comme vu</button>
+             <button class="btn danger" style="width:100%" data-filmsup="${item.id}">Retirer de ma liste</button>`;
+      } else if(tmdbId){
+        actions = `<button class="btn" style="width:100%" data-decadd="${type}:${tmdbId}">Ajouter à ma liste</button>`;
+      }
 
-  const DAY_NAMES = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
-  const MONTH_NAMES = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+      box.innerHTML = `
+        <div class="row" style="margin-bottom:16px">
+          <div class="poster wide" style="${poster?`background-image:url(${img(poster)})`:""};min-height:130px">${poster?"":esc(init(titre))}</div>
+          <div style="flex:1;min-width:0">
+            <h2 style="font-size:21px">${esc(titre)}</h2>
+            <div class="mono" style="font-size:12px;color:var(--brume);margin-top:6px">
+              ${annee||"—"}${duree?" · "+duree+" min":""}${note?" · ★ "+note.toFixed(1):""}
+            </div>
+            ${d && type==="series" && d.number_of_seasons ? `<div class="mono" style="font-size:11.5px;color:var(--brume);margin-top:3px">${d.number_of_seasons} saison${d.number_of_seasons>1?"s":""} · ${d.number_of_episodes} épisodes</div>` : ""}
+          </div>
+        </div>
+        ${overview ? `<p style="font-size:14px;line-height:1.55;margin-bottom:16px">${esc(overview)}</p>` : ""}
+        ${realisation ? `<div style="margin-bottom:14px">
+          <div class="eyebrow" style="margin-bottom:5px">${type==="films"?"Réalisation":"Création"}</div>
+          <div style="font-size:13.5px;color:var(--brume)">${esc(realisation)}</div>
+        </div>` : ""}
+        ${cast.length ? `<div style="margin-bottom:16px">
+          <div class="eyebrow" style="margin-bottom:5px">Avec</div>
+          <div style="font-size:13.5px;color:var(--brume)">${cast.map(esc).join(" · ")}</div>
+        </div>` : ""}
+        ${trailerUrl ? `<a href="${trailerUrl}" target="_blank" rel="noopener" class="btn ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-bottom:9px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Bande-annonce
+        </a>` : ""}
+        ${actions}
+        ${!overview && !cast.length && !trailerUrl && !aCle() ? `<p style="font-size:13px;color:var(--brume);text-align:center;padding:20px 0">Ajoute une clé TMDB dans Réglages pour voir le synopsis, les acteurs et la bande-annonce.</p>` : ""}
+      `;
+    });
+}
 
-  function todayKey(){
-    const d = new Date();
-    return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
-  }
-  function formatDate(d){
-    return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
-  }
-  function activeExercises(){
-    return exercises.filter(e => e.enabled);
-  }
+// Fiche personne : liste ses films et séries les plus notables.
+// combined_credits renvoie 'cast' (rôles d'interprétation) et 'crew' (équipe technique).
+// Pour un réalisateur, l'utile vit dans crew (jobs Director/Writer). Pour un acteur, dans cast.
+async function fichePersonne(personneId, nom){
+  feuille(`<div class="poignee"></div>
+    <div id="fpers"><div style="padding:40px;text-align:center"><span class="spin"></span></div></div>`,
+    async el=>{
+      const box = el.querySelector("#fpers");
+      try{
+        const d = await tmdb("/person/"+personneId, {append_to_response:"combined_credits"});
+        const c = d.combined_credits || {};
+        // On regroupe les crédits par titre (un même film peut apparaître comme réalisateur
+        // ET scénariste — on le compte une fois) et on garde le rôle le plus parlant.
+        const seen = new Map();
+        const ajoute = (r, role) => {
+          const k = r.media_type + ":" + r.id;
+          if(seen.has(k)) return;
+          if(!r.poster_path) return;   // sans affiche, la grille devient triste
+          if((r.vote_count||0) < 20) return; // titres trop confidentiels
+          seen.set(k, {
+            tmdbId: r.id,
+            type: r.media_type === "tv" ? "series" : "films",
+            titre: r.title || r.name,
+            annee: (r.release_date||r.first_air_date||"").slice(0,4),
+            poster: r.poster_path,
+            note: r.vote_average || 0,
+            votes: r.vote_count || 0,
+            role,
+            pop: r.popularity || 0,
+          });
+        };
+        // Rôles techniques prioritaires : réalisation, écriture, création
+        for(const cr of (c.crew||[])){
+          if(cr.job === "Director") ajoute(cr, "Réalisation");
+          else if(cr.job === "Writer" || cr.job === "Screenplay") ajoute(cr, "Scénario");
+        }
+        // Puis les rôles d'interprétation
+        for(const cr of (c.cast||[])) ajoute(cr, cr.character ? "Rôle : "+cr.character : "Interprétation");
+        const items = [...seen.values()].sort((a,b)=> b.pop - a.pop).slice(0,30);
 
-  function newSession(){
-    const snapshot = activeExercises().map(e => ({
-      id:e.id, name:e.name,
-      target: typeof e.target === 'number' ? e.target : null,
-      perLeg: !!e.perLeg,
-      level: clampLevel(e.level),
-      variant: variantOf(e)
-    }));
-    return {
-      dateKey: todayKey(),
-      timestamp: Date.now(),
-      round: 1,
-      rounds: settings.rounds,
-      exercises: snapshot,   // frozen list for this session
-      data: snapshot.map(ex => ({
-        id: ex.id,
-        completedRounds: [],
-        doneThisRound: false,
-        _pending: typeof ex.target === 'number' ? ex.target : null
-      }))
+        const bio = d.biography ? (d.biography.length > 260 ? d.biography.slice(0,257)+"…" : d.biography) : "";
+        box.innerHTML = `
+          <div class="row" style="margin-bottom:18px;align-items:center">
+            <div class="pers-photo" style="width:88px;height:88px;flex:0 0 88px;${d.profile_path?`background-image:url(https://image.tmdb.org/t/p/w185${d.profile_path})`:""}"></div>
+            <div style="flex:1;min-width:0">
+              <h2 style="font-size:20px">${esc(d.name||nom)}</h2>
+              ${d.known_for_department ? `<div class="mono" style="font-size:11.5px;color:var(--brume);margin-top:5px;letter-spacing:.04em">${esc(d.known_for_department)}</div>` : ""}
+            </div>
+          </div>
+          ${bio ? `<p style="font-size:13.5px;line-height:1.55;color:var(--brume);margin-bottom:18px">${esc(bio)}</p>` : ""}
+          <div class="eyebrow" style="margin-bottom:11px">Œuvres notables</div>
+          ${items.length ? `<div class="cartes">${items.map(x=>{
+            const dedans = dansMaListe(x.tmdbId, x.type);
+            return `<div class="tuile ${dedans?"dedans":""}" data-fdec="${x.type}:${x.tmdbId}">
+              <div class="aff" style="background-image:url(${img(x.poster)})">
+                <span class="marque">${x.type==="series"?"SÉRIE":"FILM"}</span>
+                ${dedans?"":`<button class="plus" data-decadd="${x.type}:${x.tmdbId}" aria-label="Ajouter à ma liste">+</button>`}
+              </div>
+              <div style="min-width:0">
+                <div class="nom">${esc(x.titre)}</div>
+                <div class="pq">${dedans?"déjà dans ta liste":esc(x.role)}</div>
+              </div>
+            </div>`;
+          }).join("")}</div>` : `<p style="font-size:13.5px;color:var(--brume)">Aucune œuvre suffisamment notable trouvée.</p>`}
+        `;
+      }catch(e){ box.innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+    });
+}
+
+/* ---- page Découverte ---- */
+function vueDecouv(){
+  if(!aCle()) return vide("Découverte a besoin d'une clé TMDB","Les sélections viennent de TMDB. Ajoute une clé dans Réglages — c'est gratuit et ça prend cinq minutes.");
+  const filtres = [["pourtoi","Pour toi"],["avenir","À venir"],["moment","Du moment"],["top","Mieux évalués"]];
+  return `<div style="position:relative;margin-bottom:11px">
+    <input id="decq" placeholder="Chercher un film ou une série" value="${esc(decQ)}" autocomplete="off" style="padding-right:40px">
+    <button id="decx" aria-label="Effacer la recherche" style="display:${decQ?"block":"none"};position:absolute;right:4px;top:0;bottom:0;width:36px;color:var(--brume);font-size:20px">×</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:11px">
+    <button class="btn ${decOnglet==="series"?"":"ghost"}" style="flex:1;padding:9px" data-dec="series">Séries</button>
+    <button class="btn ${decOnglet==="films"?"":"ghost"}" style="flex:1;padding:9px" data-dec="films">Films</button>
+  </div>
+  ${decQ?"":`<div style="display:flex;gap:7px;margin-bottom:17px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none">
+    ${filtres.map(([id,lab])=>`<button class="chip ${decFiltre===id?"on":""}" data-decf="${id}" style="flex:0 0 auto;white-space:nowrap">${lab}</button>`).join("")}
+  </div>`}
+  <div id="decRes"></div>`;
+}
+
+async function chargerDecouv(){
+  const box = $("#decRes"); if(!box) return;
+
+  // le champ est rebranché à chaque rendu ; taper ne redessine pas la page,
+  // sinon on perdrait le focus à chaque lettre.
+  const inp = $("#decq"), croix = $("#decx");
+  if(inp){
+    inp.oninput = ()=>{
+      decQ = inp.value.trim();
+      croix.style.display = decQ ? "block" : "none";
+      clearTimeout(decTimer);
+      decTimer = setTimeout(chargerDecouv, 400);
     };
   }
+  if(croix) croix.onclick = ()=>{ decQ=""; clearTimeout(decTimer); rendre(); };
 
-  // ---------- Storage ----------
-  async function loadAll(){
+  if(decQ){
+    const q = decQ;
+    box.innerHTML = '<div style="padding:40px;text-align:center"><span class="spin"></span></div>';
     try{
-      const s = await window.storage.get('settings');
-      if(s && s.value) settings = Object.assign(settings, JSON.parse(s.value));
-    }catch(e){ /* defaults */ }
-
-    try{
-      const ex = await window.storage.get('exercises_v1');
-      if(ex && ex.value) exercises = JSON.parse(ex.value);
-    }catch(e){ /* defaults */ }
-    if(!exercises || !Array.isArray(exercises) || exercises.length === 0){
-      exercises = JSON.parse(JSON.stringify(DEFAULT_EXERCISES));
-    } else {
-      // Migration to pv4: numeric progressive targets + muscle groups
-      exercises.forEach(ex => {
-        const def = DEFAULT_EXERCISES.find(d => d.id === ex.id);
-        if(def && ex.pv !== PROGRESSION_VERSION){
-          // pv3 → pv4: just add group. pv1/pv2 → pv4: full upgrade.
-          if(ex.pv !== 3){
-            if(ex.pv !== 2){
-              const oldLvl = clampLevel(ex.level != null ? ex.level : 3);
-              ex.level = clampLevel(oldLvl - 2);
-            }
-            ex.variants = def.variants.slice();
-            ex.targetMin = def.targetMin;
-            ex.targetMax = def.targetMax;
-            ex.target = def.targetMin;
-            ex.perLeg = def.perLeg;
-          }
-          ex.group = def.group;
-          ex.pv = PROGRESSION_VERSION;
-        } else if(!def){
-          // Custom exercise: give it numeric target fields and a group if missing
-          if(!Array.isArray(ex.variants) || ex.variants.length !== 5){
-            ex.variants = genericVariants(ex.name);
-          }
-          if(typeof ex.targetMin !== 'number'){ ex.targetMin = 10; }
-          if(typeof ex.targetMax !== 'number'){ ex.targetMax = 20; }
-          if(typeof ex.target !== 'number'){ ex.target = ex.targetMin; }
-          if(ex.perLeg == null) ex.perLeg = false;
-          if(ex.level == null) ex.level = 1;
-          if(!ex.group) ex.group = 'autre';
-        }
-        if(!ex.group) ex.group = DEFAULT_GROUPS[ex.id] || 'autre';
-        ex.level = clampLevel(ex.level);
-        if(typeof ex.target === 'number'){
-          ex.target = Math.max(ex.targetMin, Math.min(ex.targetMax, ex.target));
-        }
-      });
-      // Seed newly-added default exercises (e.g. Dips) into an existing library
-      DEFAULT_EXERCISES.forEach(def => {
-        if(!exercises.some(ex => ex.id === def.id)){
-          exercises.push(JSON.parse(JSON.stringify(def)));
-        }
-      });
-      saveExercises();
-    }
-
-    try{
-      const h = await window.storage.get('sessions_history');
-      if(h && h.value) history = JSON.parse(h.value);
-    }catch(e){ history = []; }
-
-    try{
-      const cur = await window.storage.get('current_session');
-      if(cur && cur.value){
-        const parsed = JSON.parse(cur.value);
-        if(parsed.dateKey === todayKey() && Array.isArray(parsed.exercises)){
-          session = parsed;
-        }
-      }
-    }catch(e){ /* none */ }
-
-    if(!session) session = newSession();
+      const d = await chercherTuiles(q);
+      if(page==="decouv" && decQ===q) peindreDecouv(d, "recherche");
+    }catch(e){ box.innerHTML = `<p class="err" style="padding:10px 0">${esc(e.message)}</p>`; }
+    return;
   }
 
-  async function saveSettings(){
-    try{ await window.storage.set('settings', JSON.stringify(settings)); }
-    catch(e){ console.error('save settings failed', e); }
+  const cle = decOnglet+":"+decFiltre;
+  if(decCache[cle]){ peindreDecouv(decCache[cle], "filtre"); return; }
+  box.innerHTML = '<div style="padding:40px;text-align:center"><span class="spin"></span></div>';
+  try{
+    const d = await chargerFiltre(decOnglet, decFiltre);
+    decCache[cle] = d;
+    if(page==="decouv" && !decQ && (decOnglet+":"+decFiltre)===cle) peindreDecouv(d, "filtre");
+  }catch(e){
+    box.innerHTML = `<p class="err" style="padding:10px 0">${esc(e.message)}</p>
+      <button class="btn ghost" style="width:100%;margin-top:8px" data-decretry="1">Réessayer</button>`;
   }
-  async function saveExercises(){
-    try{ await window.storage.set('exercises_v1', JSON.stringify(exercises)); }
-    catch(e){ console.error('save exercises failed', e); }
-  }
-  async function saveCurrentSession(){
-    try{ await window.storage.set('current_session', JSON.stringify(session)); }
-    catch(e){ console.error('save session failed', e); }
-  }
-  async function saveHistory(){
-    try{ await window.storage.set('sessions_history', JSON.stringify(history)); }
-    catch(e){ console.error('save history failed', e); }
+}
+
+// Intros et textes vides selon la paire onglet:filtre. Table plutôt que cascade de if.
+const INTROS = {
+  "series:moment": "Séries actuellement diffusées. Ce que tu suis déjà est écarté.",
+  "series:avenir": "Nouvelles séries dont la diffusion est à venir.",
+  "series:top":    "Les séries les mieux notées selon TMDB.",
+  "series:pourtoi":"Sélection à partir des séries de ta liste. Ce que tu as commencé pèse le double.",
+  "films:moment":  "Films au cinéma en ce moment. Ce que tu suis déjà est écarté.",
+  "films:avenir":  "Films dont la sortie est prévue prochainement.",
+  "films:top":     "Les films les mieux notés selon TMDB.",
+  "films:pourtoi": "Sélection à partir des films de ta liste. Ce que tu as vu pèse le double.",
+};
+
+function peindreDecouv(d, mode){
+  const box = $("#decRes"); if(!box) return;
+
+  if(mode === "filtre" && decFiltre==="pourtoi" && d.vide){
+    const quoi = decOnglet==="series" ? "série" : "film";
+    return box.innerHTML = vide("Rien à suggérer pour l'instant",
+      "Les suggestions se construisent à partir de ta liste. Ajoute deux ou trois "+quoi+"s trouvés via la recherche, puis reviens.");
   }
 
-  // ---------- Toast ----------
-  let toastTimer;
-  function showToast(msg){
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=> t.classList.remove('show'), 1800);
+  const items = (mode==="recherche"
+    ? (decOnglet==="series" ? d.series : d.films).slice(0,24)
+    : d.items).filter(x => !estMasque(x.tmdbId, x.type));
+
+  if(!items.length){
+    const quoi = decOnglet==="series" ? "série" : "film";
+    if(mode === "recherche")
+      return box.innerHTML = vide("Aucun "+quoi+" pour « "+esc(decQ)+" »","Vérifie l'orthographe, ou essaie le titre original.");
+    return box.innerHTML = vide("Aucun "+quoi+" ici","Change de filtre, ou reviens plus tard — tout ce qui sortait est peut-être déjà dans ta liste.");
   }
 
-  // ---------- Sound / vibration ----------
-  // Root cause of the previous silent-beep bug: creating a fresh AudioContext
-  // inside a timer callback (not a user gesture) gets silently blocked by
-  // iOS autoplay rules. Fix: create ONE AudioContext during a real tap/touch,
-  // then just resume() and reuse it from timer callbacks afterwards.
-  let audioCtx = null;
-  let audioUnlocked = false;
+  const intro = mode === "recherche"
+    ? "Résultats pour « "+esc(decQ)+" ». Le + ajoute directement à ta liste."
+    : INTROS[decOnglet+":"+decFiltre];
 
-  function ensureAudioUnlocked(){
-    if(audioUnlocked) return;
-    try{
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const buffer = audioCtx.createBuffer(1, 1, 22050);
-      const src = audioCtx.createBufferSource();
-      src.buffer = buffer;
-      src.connect(audioCtx.destination);
-      src.start(0);
-      audioUnlocked = true;
-    }catch(e){ /* audio unavailable */ }
+  // En mode recherche, on présente d'abord les personnes trouvées (réalisatrices,
+  // acteurs) en petit rail au-dessus des affiches. Ça permet de retrouver
+  // des œuvres par nom sans avoir à connaître le titre.
+  const railPersonnes = (mode==="recherche" && d.personnes?.length)
+    ? `<div style="margin-bottom:18px">
+        <div class="eyebrow" style="margin-bottom:9px">Personnes</div>
+        <div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none">
+          ${d.personnes.map(p=>`
+            <button class="pers" data-personne="${p.tmdbId}:${encodeURIComponent(p.nom)}">
+              <div class="pers-photo" style="background-image:url(https://image.tmdb.org/t/p/w185${p.photo})"></div>
+              <div class="pers-nom">${esc(p.nom)}</div>
+              <div class="pers-role">${esc(p.role||"")}</div>
+            </button>`).join("")}
+        </div>
+      </div>`
+    : "";
 
-    // Best-effort keep-alive loop — helps only while backgrounded, not locked.
-    const keepAlive = document.getElementById('keepAliveAudio');
-    if(keepAlive && !keepAlive.src){
-      keepAlive.src = 'data:audio/wav;base64,' + SILENCE_WAV_B64;
-      keepAlive.volume = 0.01;
-      keepAlive.play().catch(()=>{});
-    }
-  }
-  ['touchstart','click'].forEach(evt=>{
-    document.addEventListener(evt, ensureAudioUnlocked, { passive:true });
+  box.innerHTML = `<p style="font-size:13px;color:var(--brume);margin-bottom:14px">${intro}</p>
+  ${railPersonnes}
+  <div class="cartes">${items.map(x=>{
+    const dedans = dansMaListe(x.tmdbId, x.type);
+    const pq = decFiltre==="pourtoi" && mode==="filtre" && x.raisons?.length
+      ? "d'après "+esc(x.raisons[0])+(x.raisons.length>1?" +"+(x.raisons.length-1):"")
+      : (x.annee||"—")+(x.note?" · "+x.note.toFixed(1):"");
+    return `<div class="tuile ${dedans?"dedans":""}" data-fdec="${x.type}:${x.tmdbId}">
+      <div class="aff" style="${x.poster?`background-image:url(${img(x.poster)})`:""}">
+        ${x.poster?"":esc(init(x.titre))}
+        <span class="marque">${x.type==="series"?"SÉRIE":"FILM"}</span>
+        ${dedans?"":`<button class="masquer" data-masq="${x.type}:${x.tmdbId}" aria-label="Ne plus me proposer">−</button>`}
+        ${dedans?"":`<button class="plus" data-decadd="${x.type}:${x.tmdbId}" aria-label="Ajouter à ma liste">+</button>`}
+      </div>
+      <div style="min-width:0">
+        <div class="nom">${esc(x.titre)}</div>
+        <div class="pq">${dedans?"déjà dans ta liste":pq}</div>
+      </div>
+    </div>`;
+  }).join("")}</div>`;
+}
+
+/* ---- page Historique ---- */
+function vueHist(){
+  const ong = `<div style="display:flex;gap:8px;margin-bottom:18px">
+    <button class="btn ${histOnglet==="series"?"":"ghost"}" style="flex:1;padding:9px" data-ong="series">Séries</button>
+    <button class="btn ${histOnglet==="films"?"":"ghost"}" style="flex:1;padding:9px" data-ong="films">Films</button>
+  </div>`;
+  return ong + (histOnglet==="series" ? histSeries() : histFilms());
+}
+function histSeries(){
+  const avec = D.series.filter(s=>nbVus(s)>0);
+  if(!avec.length) return vide("Rien de coché pour l'instant","Les épisodes que tu marques comme vus apparaîtront ici, saison par saison.");
+  avec.sort((a,b)=> histSerieTri==="vu"
+    ? derniereActivite(b).localeCompare(derniereActivite(a))
+    : (b.annee||"0").localeCompare(a.annee||"0") || a.titre.localeCompare(b.titre));
+  const totalMin = avec.reduce((a,s)=>a+totalMinSerie(s),0);
+  const total = dureeAffichee(totalMin);
+  return `<div style="display:flex;gap:7px;margin-bottom:14px">
+    <button class="chip ${histSerieTri==='vu'?'on':''}" data-hts="vu">Vu récemment</button>
+    <button class="chip ${histSerieTri==='sortie'?'on':''}" data-hts="sortie">Date de sortie</button>
+  </div>
+  <div class="mono" style="font-size:12px;color:var(--brume);margin-bottom:14px">${avec.length} série${avec.length>1?"s":""}${total?" · "+total:""}</div>` + avec.map(s=>{
+    const dep = histSerieOuv.has(s.id);
+    const saisonsVues = s.saisons.filter(sa=>sa.episodes.some(e=>s.vus[cle(sa.n,e.n)]));
+    return `<div class="card" style="margin-bottom:10px">
+      <button class="ligne" data-hs="${s.id}" aria-expanded="${dep}">
+        ${chev(dep)}
+        <span class="poster" data-ffiche="series:${s.id}" style="${s.poster?`background-image:url(${img(s.poster)})`:""};width:38px;flex:0 0 38px;min-height:54px;font-size:12px">${s.poster?"":esc(init(s.titre))}</span>
+        <span style="flex:1;min-width:0;text-align:left">
+          <span style="font-weight:600;font-size:15.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.titre)}</span>
+          <span class="mono" style="font-size:11px;color:var(--brume)">${nbVus(s)}/${totalEp(s)} épisodes · ${saisonsVues.length} saison${saisonsVues.length>1?"s":""}</span>
+        </span>
+        ${fini(s)?'<span class="pill" style="color:var(--beurre);border-color:var(--beurre);flex:0 0 auto">Terminée</span>':""}
+      </button>
+      ${dep ? `<div style="padding:0 14px 12px">
+        ${saisonsVues.map(sa=>{
+          const k = s.id+":"+sa.n;
+          const so = histSaisonOuv.has(k);
+          const vus = sa.episodes.filter(e=>s.vus[cle(sa.n,e.n)]);
+          return `<button class="ligne sous" data-hsa="${k}" aria-expanded="${so}">
+            ${chev(so, 13)}
+            <span class="mono" style="flex:1;text-align:left;font-size:13px;font-weight:600;color:var(--beurre)">Saison ${sa.n}</span>
+            <span class="mono" style="font-size:11px;color:var(--brume)">${vus.length}/${sa.episodes.length}</span>
+          </button>
+          ${so ? `<div style="padding:2px 0 8px 22px">
+            ${vus.map(e=>`<div style="display:flex;gap:9px;padding:5px 0;font-size:13px;align-items:baseline">
+              <span class="mono" style="color:var(--brume);flex:0 0 30px">E${String(e.n).padStart(2,"0")}</span>
+              <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.titre||"Épisode "+e.n)}</span>
+              <span class="mono" style="color:var(--brume);font-size:10.5px;flex:0 0 auto">${dateFr(s.vus[cle(sa.n,e.n)])}</span>
+            </div>`).join("")}
+          </div>` : ""}`;
+        }).join("")}
+        <button class="btn ghost" style="width:100%;margin-top:8px;padding:8px;font-size:13px" data-detail="${s.id}">Modifier les épisodes</button>
+      </div>` : ""}
+    </div>`;
+  }).join("");
+}
+function chev(ouvert, t=16){
+  return `<svg class="chev ${ouvert?"on":""}" style="width:${t}px;height:${t}px;flex:0 0 ${t}px" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>`;
+}
+function histFilms(){
+  const vus = D.films.filter(f=>f.vuLe);
+  if(!vus.length) return vide("Aucun film vu","Marque un film comme vu depuis l'onglet Films.");
+  vus.sort((a,b)=> histFilmTri==="vu"
+    ? b.vuLe.localeCompare(a.vuLe)
+    : (b.annee||"0").localeCompare(a.annee||"0") || a.titre.localeCompare(b.titre));
+  const h = vus.reduce((a,f)=>a+(f.duree||0),0);
+  const total = dureeAffichee(h);
+  return `<div style="display:flex;gap:7px;margin-bottom:14px">
+    <button class="chip ${histFilmTri==='vu'?'on':''}" data-htf="vu">Vu récemment</button>
+    <button class="chip ${histFilmTri==='sortie'?'on':''}" data-htf="sortie">Date de sortie</button>
+  </div>
+  <div class="mono" style="font-size:12px;color:var(--brume);margin-bottom:14px">${vus.length} film${vus.length>1?"s":""}${total?" · "+total:""}</div>
+  <div class="cartes trois">${vus.map(f=>`
+    <div class="tuile" data-ffiche="films:${f.id}">
+      <div class="aff" style="${f.poster?`background-image:url(${img(f.poster)})`:""}">${f.poster?"":esc(init(f.titre))}</div>
+      <div>
+        <div class="nom">${esc(f.titre)}</div>
+        <div class="pq">${histFilmTri==='vu' ? "Vu "+dateFr(f.vuLe) : (f.annee||"—")}</div>
+      </div>
+    </div>`).join("")}</div>`;
+}
+
+/* ---- page Réglages ---- */
+function vueReglages(){
+  return `<div class="card" style="padding:17px;margin-bottom:14px">
+    <h3 style="font-size:17px;margin-bottom:5px">Clé TMDB</h3>
+    <p style="font-size:13.5px;color:var(--brume);margin-bottom:12px">Avec une clé, la recherche remplit les saisons, les épisodes et les affiches automatiquement. Sans clé, tu saisis les séries à la main. La clé reste sur cet appareil.</p>
+    <input id="cleTmdb" type="password" placeholder="Colle ta clé API TMDB" value="${esc(D.tmdb)}" autocomplete="off">
+    <div style="display:flex;gap:8px;margin-top:11px">
+      <button class="btn" style="flex:1" id="saveCle">Enregistrer</button>
+      <button class="btn ghost" id="testCle">Tester</button>
+    </div>
+    <div id="cleEtat" style="font-size:13px;margin-top:10px;color:var(--brume)">${aCle()?"Clé enregistrée.":"Aucune clé — mode saisie manuelle."}</div>
+    <p style="font-size:12.5px;color:var(--brume);margin-top:12px">Clé gratuite sur themoviedb.org → Paramètres → API.</p>
+  </div>
+
+  <div class="card" style="padding:17px;margin-bottom:14px">
+    <h3 style="font-size:17px;margin-bottom:5px">Recommandations masquées</h3>
+    <p style="font-size:13.5px;color:var(--brume);margin-bottom:12px">${D.masques.series.length + D.masques.films.length ? (D.masques.series.length + D.masques.films.length)+" titre"+(D.masques.series.length+D.masques.films.length>1?"s":"")+" ne te sera plus proposé dans Découverte." : "Le bouton − sur une tuile de Découverte cache une recommandation. Elles apparaîtront ici pour être réactivées."}</p>
+    <button class="btn ghost" style="width:100%" id="reinitMasques" ${!(D.masques.series.length + D.masques.films.length) ? "disabled style=\"opacity:.5\"" : ""}>Tout réafficher</button>
+  </div>
+
+  <div class="card" style="padding:17px;margin-bottom:14px">
+    <h3 style="font-size:17px;margin-bottom:5px">Tes données</h3>
+    <p style="font-size:13.5px;color:var(--brume);margin-bottom:12px">${D.series.length} série${D.series.length>1?"s":""} · ${D.films.length} film${D.films.length>1?"s":""}. Tout est stocké dans ce navigateur. Exporte de temps en temps.</p>
+    <div style="display:flex;gap:8px">
+      <button class="btn ghost" style="flex:1" id="exp">Exporter</button>
+      <button class="btn ghost" style="flex:1" id="imp">Importer</button>
+    </div>
+  </div>
+
+  <div class="card" style="padding:17px">
+    <h3 style="font-size:17px;margin-bottom:5px">Tout effacer</h3>
+    <p style="font-size:13.5px;color:var(--brume);margin-bottom:12px">Supprime séries, films et historique. Sans retour possible.</p>
+    <button class="btn danger" style="width:100%" id="raz">Effacer mes données</button>
+  </div>`;
+}
+
+function vide(t,s){ return `<div class="vide"><h3>${t}</h3><p style="font-size:14px">${s}</p></div>`; }
+
+/* ============ feuille : détail d'une série ============ */
+function detail(id, scroll=0){
+  const s = D.series.find(x=>x.id===id); if(!s) return;
+  const ep = suivant(s), t=totalEp(s), v=nbVus(s);
+  const corps = `
+    <div class="poignee"></div>
+    <div class="row" style="margin-bottom:18px">
+      <div class="poster wide" style="${s.poster?`background-image:url(${img(s.poster)})`:""};min-height:112px">${s.poster?"":esc(init(s.titre))}</div>
+      <div style="flex:1;min-width:0">
+        <h2 style="font-size:22px">${esc(s.titre)}</h2>
+        <div class="mono" style="font-size:12px;color:var(--brume);margin:5px 0 9px">${s.annee||"—"} · ${s.saisons.length} saison${s.saisons.length>1?"s":""} · ${v}/${t} vus</div>
+        ${fini(s)?'<span class="pill" style="color:var(--beurre);border-color:var(--beurre)">Terminée</span>':(ep?`<div style="font-size:13.5px;color:var(--brume)">Suivant : <span class="mono" style="color:var(--beurre)">S${String(ep.saison).padStart(2,"0")}E${String(ep.n).padStart(2,"0")}</span></div>`:"")}
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--brume);margin-bottom:14px">Tape une case pour cocher ou décocher un épisode.</p>
+    ${s.saisons.map(sa=>{
+      const vs = sa.episodes.filter(e=>s.vus[cle(sa.n,e.n)]).length;
+      return `<div style="margin-bottom:18px">
+        <div style="display:flex;align-items:baseline;gap:9px;margin-bottom:9px">
+          <span class="mono" style="font-size:12.5px;font-weight:600">Saison ${sa.n}</span>
+          <span style="flex:1;height:1px;background:var(--bord)"></span>
+          <span class="mono" style="font-size:11px;color:${vs===sa.episodes.length?"var(--beurre)":"var(--brume)"}">${vs}/${sa.episodes.length}</span>
+          <button class="mono" style="font-size:11px;color:var(--brume)" data-saison="${sa.n}">${vs===sa.episodes.length?"Tout décocher":"Tout cocher"}</button>
+        </div>
+        <div class="grid">${sa.episodes.map(e=>{
+          const on = !!s.vus[cle(sa.n,e.n)];
+          const nx = ep && ep.saison===sa.n && ep.n===e.n;
+          const fut = epFutur(e);
+          const t = (e.titre||"") + (fut ? (e.titre?" · ":"") + "Sortie " + dateEp(e.date) : "");
+          return `<button class="ep ${on?"vu":""} ${nx?"suivant":""} ${fut?"attente":""}" data-ep="${sa.n},${e.n}" title="${esc(t)}" aria-pressed="${on}">${e.n}</button>`;
+        }).join("")}</div>
+      </div>`;
+    }).join("")}
+    <button class="btn danger" style="width:100%;margin-top:6px" data-supprimer="${s.id}">Retirer cette série</button>`;
+  feuille(corps, el=>{
+    const boite = el.firstElementChild;
+    boite.scrollTop = scroll;
+    const rejouer = () => { const y = boite.scrollTop; fermer(); detail(id, y); rendre(); };
+    el.querySelectorAll("[data-ep]").forEach(b=>b.onclick=()=>{
+      const [sn,en] = b.dataset.ep.split(",").map(Number);
+      marquer(s, sn, en, !s.vus[cle(sn,en)]);
+      rejouer();
+    });
+    el.querySelectorAll("[data-saison]").forEach(b=>b.onclick=()=>{
+      const sn = Number(b.dataset.saison);
+      const sa = s.saisons.find(x=>x.n===sn);
+      const tout = sa.episodes.every(e=>s.vus[cle(sn,e.n)]);
+      sa.episodes.forEach(e=>marquer(s, sn, e.n, !tout));
+      rejouer();
+    });
+    // data-supprimer est géré par le handler global : évite le double confirm
   });
-
-  function tone(freq, duration, gainPeak){
-    if(!audioCtx) return;
-    if(audioCtx.state === 'suspended'){ audioCtx.resume().catch(()=>{}); }
-    try{
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.connect(g); g.connect(audioCtx.destination);
-      o.type = 'sine';
-      o.frequency.value = freq;
-      g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(gainPeak, audioCtx.currentTime + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-      o.start();
-      o.stop(audioCtx.currentTime + duration + 0.05);
-    }catch(e){ /* audio unavailable */ }
-  }
-
-  function tickBeep(){
-    tone(660, 0.15, 0.22);
-    if(navigator.vibrate) navigator.vibrate(50);
-  }
-  function finalBeep(){
-    tone(880, 0.5, 0.32);
-    if(navigator.vibrate) navigator.vibrate([120,60,120]);
-  }
-
-  // ---------- Rendering ----------
-  function render(){
-    document.getElementById('dateLine').textContent = formatDate(new Date());
-    document.querySelectorAll('.tab-btn').forEach(b=>{
-      b.classList.toggle('active', b.dataset.tab === activeTab);
-    });
-    const main = document.getElementById('main');
-    if(activeTab === 'seance') main.innerHTML = renderSeance();
-    else if(activeTab === 'tracking') main.innerHTML = renderTracking();
-    else if(activeTab === 'historique') main.innerHTML = renderHistorique();
-    else main.innerHTML = renderReglages();
-    attachHandlers();
-  }
-
-  function allDoneThisRound(){
-    return session.data.every(d => d.doneThisRound);
-  }
-
-  function sessionMatchesLibrary(){
-    const active = activeExercises();
-    if(active.length !== session.exercises.length) return false;
-    return active.every((e,i) =>
-      e.id === session.exercises[i].id &&
-      clampLevel(e.level) === clampLevel(session.exercises[i].level) &&
-      (typeof e.target === 'number' ? e.target : null) === session.exercises[i].target
-    );
-  }
-
-  function sessionHasProgress(){
-    return session.data.some(d => d.completedRounds.length > 0 || d.doneThisRound);
-  }
-
-  function renderSeance(){
-    if(session.exercises.length === 0){
-      return `<div class="empty-state"><div class="ico">◍</div>Aucun exercice actif.<br>Va dans Réglages pour activer ou ajouter des exercices.</div>`;
-    }
-
-    const roundIdx = session.round;
-    let pips = '';
-    for(let i=1;i<=session.rounds;i++){
-      let cls = 'pip';
-      if(i < roundIdx) cls += ' done';
-      else if(i === roundIdx) cls += ' current';
-      pips += `<div class="${cls}">${i}</div>`;
-    }
-
-    // Banner if library changed but session already has progress
-    let syncBanner = '';
-    if(!sessionMatchesLibrary()){
-      if(sessionHasProgress()){
-        syncBanner = `<button class="finish-btn subtle" id="applyNewList">La liste d'exercices a changé — appuyer pour recommencer la séance avec la nouvelle liste</button>`;
-      } else {
-        // no progress: silently sync
-        session = newSession();
-        saveCurrentSession();
-      }
-    }
-
-    let cards = session.exercises.map((ex, idx) => {
-      const d = session.data[idx];
-      const isDone = d.doneThisRound;
-      return `
-      <div class="exercise ${isDone?'completed':''}" data-idx="${idx}">
-        <div class="ex-top">
-          <div>
-            <div class="ex-num">${String(idx+1).padStart(2,'0')} / ${String(session.exercises.length).padStart(2,'0')}</div>
-            <div class="ex-name">${escapeHtml(ex.name)}</div>
-            <div class="ex-variant"><span class="lvl-badge">N${ex.level || 1}</span>${escapeHtml(ex.variant || ex.name)}</div>
-            <div class="ex-target">${typeof ex.target === 'number' ? 'Cible : '+ex.target+' reps'+(ex.perLeg?' / jambe':'')+' × tous les tours' : ''}</div>
-          </div>
-          <button class="ex-check" data-check="${idx}">${isDone?'✓':''}</button>
-        </div>
-        <div class="ex-row">
-          <div class="stepper">
-            <button data-step="minus" data-idx="${idx}">−</button>
-            <button data-step="plus" data-idx="${idx}">+</button>
-          </div>
-          <input class="reps-input mono" type="number" inputmode="numeric" placeholder="${typeof ex.target === 'number' ? ex.target : 'reps'}" data-input="${idx}" value="${d._pending!=null?d._pending:''}">
-        </div>
-        <button class="validate-btn" data-validate="${idx}">${isDone ? 'Série enregistrée' : 'Valider la série'}</button>
-      </div>`;
-    }).join('');
-
-    const ready = allDoneThisRound();
-    const isLastRound = session.round >= session.rounds;
-    const finishLabel = ready
-      ? (isLastRound ? 'Terminer la séance' : `Tour ${session.round} terminé — repos puis tour suivant`)
-      : `${session.data.filter(d=>!d.doneThisRound).length} exercice(s) restant(s) ce tour`;
-
-    return `
-      <div class="round-tracker">
-        <div>
-          <div class="round-label">Tour</div>
-          <div class="round-pips">${pips}</div>
-        </div>
-      </div>
-      ${syncBanner}
-      ${cards}
-      <button class="finish-btn ${ready?'ready':''}" id="roundAction">${finishLabel}</button>
-    `;
-  }
-
-  // ---------- Tracking ----------
-  function buildTrackingSeries(){
-    // Map: exercise name -> [{timestamp, totalReps, level}] sorted by time
-    const map = new Map();
-    const sorted = [...history].sort((a,b)=> a.timestamp - b.timestamp);
-    sorted.forEach(s => {
-      s.summary.forEach(e => {
-        if(!map.has(e.name)) map.set(e.name, []);
-        map.get(e.name).push({ t: s.timestamp, reps: e.totalReps, level: e.level || null });
-      });
-    });
-    return map;
-  }
-
-  function shortDate(ts){
-    const d = new Date(ts);
-    return d.getDate() + '/' + (d.getMonth()+1);
-  }
-
-  function renderChart(points){
-    // points: [{t, reps}] chronological. Show up to last 10 sessions.
-    const data = points.slice(-10);
-    const W = 460, H = 150;
-    const padL = 8, padR = 8, padTop = 22, padBottom = 22;
-    const innerW = W - padL - padR;
-    const innerH = H - padTop - padBottom;
-    const maxVal = Math.max(...data.map(p=>p.reps), 1);
-
-    const n = data.length;
-    const slot = innerW / n;
-    const barW = Math.min(34, slot * 0.55);
-
-    let bars = '', labels = '', vals = '', sparkPts = [], lvlMarks = '';
-    data.forEach((p, i) => {
-      const cx = padL + slot * i + slot / 2;
-      const h = Math.max(2, (p.reps / maxVal) * innerH);
-      const y = padTop + innerH - h;
-      const isLast = i === n - 1;
-      bars += `<rect class="bar ${isLast?'last':''}" x="${(cx - barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="4"></rect>`;
-      vals += `<text class="val-label ${isLast?'last':''}" x="${cx.toFixed(1)}" y="${(y-6).toFixed(1)}">${p.reps}</text>`;
-      labels += `<text class="axis-label" x="${cx.toFixed(1)}" y="${H-6}" text-anchor="middle">${shortDate(p.t)}</text>`;
-      // Level change marker: shown when level differs from the previous session
-      const prevLvl = i > 0 ? data[i-1].level : null;
-      if(p.level && prevLvl && p.level !== prevLvl){
-        lvlMarks += `<text class="axis-label" x="${cx.toFixed(1)}" y="${(y + Math.min(h-4, 14)).toFixed(1)}" text-anchor="middle" fill="var(--accent)" font-weight="600">N${p.level}</text>`;
-      }
-      sparkPts.push(`${cx.toFixed(1)},${(y).toFixed(1)}`);
-    });
-
-    let spark = '';
-    if(n >= 2){
-      spark = `<polyline class="spark" points="${sparkPts.join(' ')}" opacity="0.5"></polyline>`;
-    }
-
-    const gridY = padTop + innerH;
-    return `
-    <svg class="track-chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img">
-      <line class="grid-line" x1="${padL}" y1="${gridY}" x2="${W-padR}" y2="${gridY}"></line>
-      ${bars}
-      ${spark}
-      ${vals}
-      ${labels}
-      ${lvlMarks}
-    </svg>`;
-  }
-
-  function renderTracking(){
-    if(history.length === 0){
-      return `<div class="empty-state"><div class="ico">◍</div>Pas encore de données à visualiser.<br>Termine au moins une séance pour voir tes progrès ici.</div>`;
-    }
-
-    const series = buildTrackingSeries();
-
-    // Order tracking cards to match current library order, then any others (renamed/removed exercises still in history)
-    const orderedNames = [];
-    exercises.forEach(e => { if(series.has(e.name)) orderedNames.push(e.name); });
-    series.forEach((_, name) => { if(!orderedNames.includes(name)) orderedNames.push(name); });
-
-    // Global all-time summary across every exercise
-    const grandTotal = orderedNames.reduce((sum, name) => {
-      const pts = series.get(name);
-      return sum + pts.reduce((s,p) => s + p.reps, 0);
-    }, 0);
-    const globalSummary = `
-      <div class="track-card" style="border-color:var(--accent-dim);">
-        <div class="track-head" style="margin-bottom:0;">
-          <div class="track-name">Total cumulé — toutes séances</div>
-          <div class="track-delta up mono" style="font-size:20px;">${grandTotal.toLocaleString('fr-FR')}</div>
-        </div>
-      </div>`;
-
-    const cards = orderedNames.map(name => {
-      const pts = series.get(name);
-      const last = pts[pts.length-1].reps;
-      const best = Math.max(...pts.map(p=>p.reps));
-      const first = pts[0].reps;
-      const delta = last - first;
-      const deltaCls = delta > 0 ? 'up' : (delta < 0 ? 'down' : 'flat');
-      const deltaTxt = pts.length < 2 ? '—' : (delta > 0 ? '+'+delta : String(delta));
-      const cumulative = pts.reduce((s,p) => s + p.reps, 0);
-      const libEx = exercises.find(e => e.name === name);
-      const lvlBadge = libEx ? `<span class="lvl-badge" style="margin-left:8px;">N${clampLevel(libEx.level)}</span>` : '';
-
-      const chart = pts.length >= 2
-        ? renderChart(pts)
-        : `<div class="track-note">Une seule séance enregistrée — le graphique apparaîtra dès la deuxième.</div>`;
-
-      return `
-      <div class="track-card">
-        <div class="track-head">
-          <div class="track-name">${escapeHtml(name)}${lvlBadge}</div>
-          <div class="track-delta ${deltaCls}">${deltaTxt}${pts.length >= 2 ? ' reps' : ''}</div>
-        </div>
-        <div class="track-stats">
-          <div class="track-stat">Dernière<b>${last}</b></div>
-          <div class="track-stat">Record<b>${best}</b></div>
-          <div class="track-stat">Séances<b>${pts.length}</b></div>
-          <div class="track-stat">Cumulé<b>${cumulative.toLocaleString('fr-FR')}</b></div>
-        </div>
-        ${chart}
-      </div>`;
-    }).join('');
-
-    return globalSummary + cards + `<div class="track-note" style="padding:0 4px 8px 4px;">Les valeurs correspondent au total de reps par séance (tous tours confondus). Le total cumulé additionne toutes les séances enregistrées pour cet exercice, y compris à travers les changements de niveau. Un marqueur « N » doré apparaît sur une barre quand le niveau de difficulté a changé par rapport à la séance précédente — une baisse de reps à ce moment-là est normale et attendue.</div>`;
-  }
-
-  function renderHistorique(){
-    if(history.length === 0){
-      return `<div class="empty-state"><div class="ico">◍</div>Aucune séance enregistrée pour l'instant.<br>Termine ta première séance pour la voir ici.</div>`;
-    }
-    const sorted = [...history].sort((a,b)=> b.timestamp - a.timestamp);
-    return sorted.map(s => {
-      const d = new Date(s.timestamp);
-      const exRows = s.summary.map(e => {
-        const hitMark = e.hit ? ' <span style="color:var(--teal);">✓</span>' : (e.target != null ? '' : '');
-        const lvlTag = e.level ? ' <span style="color:var(--accent);font-family:\'IBM Plex Mono\',monospace;font-size:10px;">N'+e.level+'</span>' : '';
-        return `<div class="hist-ex"><span>${escapeHtml(e.name)}${lvlTag}${hitMark}</span><b>${e.totalReps}</b></div>`;
-      }).join('');
-      const progRows = (s.progressions && s.progressions.length > 0)
-        ? `<div style="margin-top:10px; padding-top:8px; border-top:1px solid var(--line);">${s.progressions.map(p=>`<div style="font-size:12px; color:var(--accent); margin-bottom:3px;">▲ ${escapeHtml(p)}</div>`).join('')}</div>`
-        : '';
-      return `
-      <div class="hist-session">
-        <div class="hist-date">${formatDate(d)}</div>
-        <div class="hist-meta">${s.roundsCompleted} tour(s) · ${s.totalReps} reps au total</div>
-        <div class="hist-grid">${exRows}</div>
-        ${progRows}
-      </div>`;
-    }).join('');
-  }
-
-  function renderReglages(){
-    // Build one editor row per exercise (index = position in the exercises array = circuit order)
-    function exerciseEditorRow(ex, idx){
-      const lvl = clampLevel(ex.level);
-      const pips = [1,2,3,4,5].map(n =>
-        `<button class="lvl-pip ${n===lvl?'active':''}" data-exlevel="${idx}" data-lvl="${n}">${n}</button>`
-      ).join('');
-      const hasNumericTarget = typeof ex.target === 'number';
-      const circuitPos = ex.enabled
-        ? `<span style="color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:10px;margin-right:6px;">#${activeExercises().indexOf(ex)+1}</span>`
-        : '';
-      const targetRow = hasNumericTarget ? `
-      <div class="ex-level-row ${ex.enabled?'':'hidden-row'}" style="padding-top:0;">
-        <div class="settings-stepper">
-          <button data-extarget="${idx}" data-delta="-1">−</button>
-          <div class="val mono">${ex.target}</div>
-          <button data-extarget="${idx}" data-delta="1">+</button>
-        </div>
-        <div class="lvl-variant-name" style="color:var(--text-dim);">Cible actuelle${ex.perLeg?' / jambe':''} · fourchette ${ex.targetMin}–${ex.targetMax}</div>
-      </div>` : '';
-      return `
-      <div class="ex-edit-row ${ex.enabled?'':'off'}" style="border-bottom:none; padding-bottom:4px;">
-        <button class="ex-toggle ${ex.enabled?'on':''}" data-extoggle="${idx}" aria-label="Activer/désactiver"></button>
-        <div class="ex-edit-main">
-          <div class="ex-edit-name">${circuitPos}${escapeHtml(ex.name)}</div>
-          <div class="ex-edit-target">${hasNumericTarget ? 'Cible '+ex.target+(ex.perLeg?' / jambe':'')+' · '+ex.targetMin+'–'+ex.targetMax : 'Pas de cible'}</div>
-        </div>
-        <div class="ex-edit-actions">
-          <button data-exmove="up" data-idx="${idx}" ${idx===0?'disabled':''}>↑</button>
-          <button data-exmove="down" data-idx="${idx}" ${idx===exercises.length-1?'disabled':''}>↓</button>
-          <button class="del" data-exdel="${idx}">✕</button>
-        </div>
-      </div>
-      <div class="ex-level-row ${ex.enabled?'':'hidden-row'}" style="border-bottom:none; padding-bottom:4px;">
-        <div class="lvl-pips">${pips}</div>
-        <div class="lvl-variant-name">${escapeHtml(variantOf(ex))}</div>
-      </div>
-      ${targetRow}`;
-    }
-
-    // Group exercises by muscle group, preserving circuit order inside each group
-    const groupSections = MUSCLE_GROUPS.map(g => {
-      const members = exercises
-        .map((ex, idx) => ({ ex, idx }))
-        .filter(m => (m.ex.group || 'autre') === g.id);
-      if(members.length === 0) return '';
-      return `
-      <div class="group-header">${g.label}</div>
-      ${members.map(m => exerciseEditorRow(m.ex, m.idx)).join('')}`;
-    }).join('');
-
-    const groupOptions = MUSCLE_GROUPS.map(g => `<option value="${g.id}">${g.label}</option>`).join('');
-
-    return `
-      <div class="settings-card">
-        <div class="settings-title">Exercices du circuit — par groupe musculaire</div>
-        ${groupSections}
-        <div class="add-ex-form">
-          <input type="text" id="newExName" placeholder="Nom de l'exercice (ex. Dips)" maxlength="40">
-          <select id="newExGroup" class="group-select">${groupOptions}</select>
-          <div style="display:flex; gap:8px;">
-            <input type="number" inputmode="numeric" id="newExMin" placeholder="Cible basse (ex. 10)" style="flex:1;">
-            <input type="number" inputmode="numeric" id="newExMax" placeholder="Cible haute (ex. 20)" style="flex:1;">
-          </div>
-          <button class="add-ex-btn" id="addExBtn">+ Ajouter l'exercice</button>
-        </div>
-        <div class="apply-note">Le numéro doré (#1, #2…) indique la position dans le circuit — l'ordre d'exécution en séance reste indépendant du regroupement musculaire, ce qui permet d'alterner les groupes (tirage, poussée, jambes…) au fil du circuit. Les flèches ↑↓ modifient cette position. La cible augmente de 1 automatiquement quand tu l'atteins sur tous les tours ; en haut de fourchette, le niveau suivant se débloque et la cible repart en bas. Changer manuellement de niveau remet la cible au minimum.</div>
-      </div>
-
-      <div class="settings-card">
-        <div class="settings-title">Structure</div>
-        <div class="settings-row">
-          <span>Nombre de tours</span>
-          <div class="settings-stepper">
-            <button data-setting="rounds" data-delta="-1">−</button>
-            <div class="val mono">${settings.rounds}</div>
-            <button data-setting="rounds" data-delta="1">+</button>
-          </div>
-        </div>
-        <div class="settings-row">
-          <span>Repos entre exercices</span>
-          <div class="settings-stepper">
-            <button data-setting="restBetweenEx" data-delta="-15">−</button>
-            <div class="val mono">${settings.restBetweenEx}s</div>
-            <button data-setting="restBetweenEx" data-delta="15">+</button>
-          </div>
-        </div>
-        <div class="settings-row">
-          <span>Repos entre tours</span>
-          <div class="settings-stepper">
-            <button data-setting="restBetweenRounds" data-delta="-15">−</button>
-            <div class="val mono">${settings.restBetweenRounds}s</div>
-            <button data-setting="restBetweenRounds" data-delta="15">+</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-card">
-        <div class="settings-title">Sauvegarde</div>
-        <div class="backup-stat">
-          <span>${history.length} séance(s) enregistrée(s)</span>
-          <span>${lastBackupLabel()}</span>
-        </div>
-        <button class="add-ex-btn" id="exportBtn" style="width:100%; margin-top:10px;">↓ Exporter la sauvegarde</button>
-        <button class="add-ex-btn" id="importBtn" style="width:100%; margin-top:8px; border-color:var(--line); color:var(--text-dim);">↑ Restaurer depuis un fichier</button>
-        <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
-        <div class="apply-note">L'export ouvre la feuille de partage d'iOS : choisis « Enregistrer dans Fichiers » puis iCloud Drive (ou Google Drive). Le fichier porte toujours le même nom (sport-sauvegarde.json) : en l'enregistrant au même endroit, iOS propose « Remplacer » et tu ne conserves qu'un seul fichier, toujours à jour. La restauration va rechercher ce fichier et remplace l'intégralité des données actuelles. Utile car Safari peut effacer les données d'un site après plusieurs semaines sans ouverture.</div>
-      </div>
-
-      <button class="finish-btn subtle" id="resetSession">Réinitialiser la séance du jour</button>
-    `;
-  }
-
-  function escapeHtml(str){
-    return String(str)
-      .replaceAll('&','&amp;').replaceAll('<','&lt;')
-      .replaceAll('>','&gt;').replaceAll('"','&quot;');
-  }
-
-  // ---------- Handlers ----------
-  function attachHandlers(){
-    document.querySelectorAll('[data-step]').forEach(btn=>{
-      btn.onclick = () => {
-        const idx = +btn.dataset.idx;
-        const input = document.querySelector(`[data-input="${idx}"]`);
-        let v = parseInt(input.value || '0', 10);
-        v += (btn.dataset.step === 'plus' ? 1 : -1);
-        if(v < 0) v = 0;
-        input.value = v;
-        session.data[idx]._pending = v;
-      };
-    });
-
-    document.querySelectorAll('[data-input]').forEach(inp=>{
-      inp.oninput = () => {
-        const idx = +inp.dataset.input;
-        session.data[idx]._pending = inp.value === '' ? null : parseInt(inp.value,10);
-      };
-    });
-
-    document.querySelectorAll('[data-validate]').forEach(btn=>{
-      btn.onclick = () => validateExercise(+btn.dataset.validate);
-    });
-    document.querySelectorAll('[data-check]').forEach(btn=>{
-      btn.onclick = () => validateExercise(+btn.dataset.check);
-    });
-
-    const roundAction = document.getElementById('roundAction');
-    if(roundAction) roundAction.onclick = onRoundActionClick;
-
-    const applyNewList = document.getElementById('applyNewList');
-    if(applyNewList){
-      applyNewList.onclick = () => {
-        session = newSession();
-        saveCurrentSession();
-        showToast('Séance relancée avec la nouvelle liste');
-        render();
-      };
-    }
-
-    // Settings: structure steppers
-    document.querySelectorAll('[data-setting]').forEach(btn=>{
-      btn.onclick = () => {
-        const key = btn.dataset.setting;
-        const delta = +btn.dataset.delta;
-        let val = settings[key] + delta;
-        if(key === 'rounds') val = Math.max(1, Math.min(8, val));
-        else val = Math.max(0, Math.min(300, val));
-        settings[key] = val;
-        saveSettings();
-        render();
-      };
-    });
-
-    // Settings: exercise editor
-    document.querySelectorAll('[data-exlevel]').forEach(btn=>{
-      btn.onclick = () => {
-        const idx = +btn.dataset.exlevel;
-        const newLvl = clampLevel(btn.dataset.lvl);
-        if(newLvl !== clampLevel(exercises[idx].level)){
-          exercises[idx].level = newLvl;
-          if(typeof exercises[idx].target === 'number'){
-            exercises[idx].target = exercises[idx].targetMin;
-          }
-        }
-        saveExercises();
-        syncSessionIfPristine();
-        render();
-      };
-    });
-
-    document.querySelectorAll('[data-extarget]').forEach(btn=>{
-      btn.onclick = () => {
-        const idx = +btn.dataset.extarget;
-        const ex = exercises[idx];
-        if(typeof ex.target !== 'number') return;
-        ex.target = Math.max(ex.targetMin, Math.min(ex.targetMax, ex.target + (+btn.dataset.delta)));
-        saveExercises();
-        syncSessionIfPristine();
-        render();
-      };
-    });
-
-    document.querySelectorAll('[data-extoggle]').forEach(btn=>{
-      btn.onclick = () => {
-        const idx = +btn.dataset.extoggle;
-        exercises[idx].enabled = !exercises[idx].enabled;
-        saveExercises();
-        syncSessionIfPristine();
-        render();
-      };
-    });
-
-    document.querySelectorAll('[data-exmove]').forEach(btn=>{
-      btn.onclick = () => {
-        const idx = +btn.dataset.idx;
-        const dir = btn.dataset.exmove === 'up' ? -1 : 1;
-        const target = idx + dir;
-        if(target < 0 || target >= exercises.length) return;
-        const tmp = exercises[idx];
-        exercises[idx] = exercises[target];
-        exercises[target] = tmp;
-        saveExercises();
-        syncSessionIfPristine();
-        render();
-      };
-    });
-
-    document.querySelectorAll('[data-exdel]').forEach(btn=>{
-      btn.onclick = () => {
-        const idx = +btn.dataset.exdel;
-        const name = exercises[idx].name;
-        exercises.splice(idx, 1);
-        saveExercises();
-        syncSessionIfPristine();
-        showToast(`« ${name} » supprimé`);
-        render();
-      };
-    });
-
-    const addBtn = document.getElementById('addExBtn');
-    if(addBtn){
-      addBtn.onclick = () => {
-        const nameInput = document.getElementById('newExName');
-        const minInput = document.getElementById('newExMin');
-        const maxInput = document.getElementById('newExMax');
-        const name = (nameInput.value || '').trim();
-        if(!name){
-          showToast("Entre un nom d'exercice");
-          return;
-        }
-        let tMin = parseInt(minInput.value, 10);
-        let tMax = parseInt(maxInput.value, 10);
-        if(isNaN(tMin) || tMin < 1) tMin = 10;
-        if(isNaN(tMax) || tMax <= tMin) tMax = tMin + 8;
-        const groupSel = document.getElementById('newExGroup');
-        const group = groupSel && groupSel.value ? groupSel.value : 'autre';
-        exercises.push({
-          id: 'custom_' + Date.now(),
-          name: name,
-          group: group,
-          enabled: true,
-          level: 1,
-          pv: PROGRESSION_VERSION,
-          targetMin: tMin,
-          targetMax: tMax,
-          target: tMin,
-          perLeg: false,
-          variants: genericVariants(name)
-        });
-        saveExercises();
-        syncSessionIfPristine();
-        showToast(`« ${name} » ajouté (cible ${tMin}–${tMax})`);
-        render();
-      };
-    }
-
-    const exportBtn = document.getElementById('exportBtn');
-    if(exportBtn) exportBtn.onclick = exportBackup;
-
-    const importBtn = document.getElementById('importBtn');
-    const importFile = document.getElementById('importFile');
-    if(importBtn && importFile){
-      importBtn.onclick = () => importFile.click();
-      importFile.onchange = () => {
-        const f = importFile.files && importFile.files[0];
-        if(f) importBackup(f);
-        importFile.value = '';
-      };
-    }
-
-    const resetBtn = document.getElementById('resetSession');
-    if(resetBtn){
-      resetBtn.onclick = () => {
-        session = newSession();
-        saveCurrentSession();
-        activeTab = 'seance';
-        showToast('Séance réinitialisée');
-        render();
-      };
-    }
-
-    document.querySelectorAll('.tab-btn').forEach(btn=>{
-      btn.onclick = () => {
-        activeTab = btn.dataset.tab;
-        render();
-      };
-    });
-  }
-
-  // If the current session has no progress yet, silently rebuild it from the new list
-  function syncSessionIfPristine(){
-    if(!sessionHasProgress()){
-      session = newSession();
-      saveCurrentSession();
-    }
-  }
-
-  function validateExercise(idx){
-    const d = session.data[idx];
-    if(d.doneThisRound){
-      d.doneThisRound = false;
-      d.completedRounds.pop();
-      const target = session.exercises[idx].target;
-      d._pending = typeof target === 'number' ? target : null;
-      saveCurrentSession();
-      render();
-      return;
-    }
-    const reps = d._pending;
-    if(reps == null || isNaN(reps) || reps <= 0){
-      showToast('Entre un nombre de reps avant de valider');
-      return;
-    }
-    d.completedRounds[session.round - 1] = reps;
-    d.doneThisRound = true;
-    d._pending = null;
-    saveCurrentSession();
-
-    const nextIdx = session.data.findIndex(x=>!x.doneThisRound);
-    if(nextIdx !== -1){
-      const nx = session.exercises[nextIdx];
-      startRest(settings.restBetweenEx, nx.variant || nx.name, false);
-    }
-    render();
-  }
-
-  function onRoundActionClick(){
-    if(!allDoneThisRound()) return;
-    if(session.round >= session.rounds){
-      finishSession();
-      return;
-    }
-    startRest(settings.restBetweenRounds, `Tour ${session.round + 1}`, true);
-  }
-
-  function advanceRound(){
-    session.round += 1;
-    session.data.forEach((d, idx) => {
-      d.doneThisRound = false;
-      const target = session.exercises[idx].target;
-      d._pending = typeof target === 'number' ? target : null;
-    });
-    saveCurrentSession();
-    render();
-    // New round starts at exercise #1 — scroll back to the top so the user
-    // isn't left at the bottom where they validated the last exercise.
-    scrollToTop();
-  }
-
-  function scrollToTop(){
-    try{
-      window.scrollTo({ top:0, behavior:'smooth' });
-    }catch(e){
-      window.scrollTo(0, 0);
-    }
-  }
-
-  async function finishSession(){
-    const progressions = [];
-    const summary = session.exercises.map((ex, idx) => {
-      const reps = session.data[idx].completedRounds.filter(r=>typeof r==='number');
-      const totalReps = reps.reduce((a,b)=>a+b,0);
-      // Target hit = every round completed AND every round >= target
-      const hit = typeof ex.target === 'number'
-        && reps.length === session.rounds
-        && reps.every(r => r >= ex.target);
-      return {
-        name: ex.name,
-        level: ex.level || null,
-        variant: ex.variant || null,
-        target: typeof ex.target === 'number' ? ex.target : null,
-        hit: !!hit,
-        totalReps
-      };
-    });
-    const totalReps = summary.reduce((a,e)=>a+e.totalReps,0);
-
-    // Apply auto-progression to the library
-    summary.forEach(s => {
-      if(!s.hit) return;
-      const ex = exercises.find(e => e.name === s.name);
-      if(!ex || typeof ex.target !== 'number') return;
-      if(ex.target < ex.targetMax){
-        ex.target += 1;
-        progressions.push(`${ex.name} : cible ${ex.target - 1} → ${ex.target}`);
-      } else if(clampLevel(ex.level) < 5){
-        ex.level = clampLevel(ex.level) + 1;
-        ex.target = ex.targetMin;
-        progressions.push(`${ex.name} : niveau ${ex.level} débloqué ! Cible remise à ${ex.targetMin}`);
-      } else {
-        progressions.push(`${ex.name} : plafond atteint (N5 à ${ex.targetMax} reps) 👑`);
-      }
-    });
-    if(progressions.length > 0) await saveExercises();
-
-    history.push({
-      dateKey: session.dateKey,
-      timestamp: Date.now(),
-      roundsCompleted: session.rounds,
-      totalReps,
-      progressions,
-      summary
-    });
-    await saveHistory();
-    session = newSession();
-    await saveCurrentSession();
-    showToast(progressions.length > 0
-      ? `Séance enregistrée · ${progressions.length} progression(s) 💪`
-      : 'Séance enregistrée 💪');
-    activeTab = 'historique';
-    render();
-  }
-
-  // ---------- Backup: export / import ----------
-  // No automatic cloud sync is possible from a static web app: writing to
-  // iCloud Drive or Google Drive requires either a native app or an OAuth
-  // server. What IS possible is handing the file to iOS's own share sheet,
-  // where "Save to Files" → iCloud Drive works. Restore uses a file picker,
-  // which can read straight back out of iCloud Drive.
-  const BACKUP_KEYS = ['sessions_history', 'exercises_v1', 'settings', 'current_session'];
-
-  function lastBackupLabel(){
-    try{
-      const ts = localStorage.getItem('last_backup_at');
-      if(!ts) return 'Jamais exportée';
-      const d = new Date(parseInt(ts, 10));
-      return 'Export : ' + formatDate(d);
-    }catch(e){ return 'Jamais exportée'; }
-  }
-
-  function buildBackupPayload(){
-    return JSON.stringify({
-      app: 'suivi-musculation',
-      backupVersion: 1,
-      progressionVersion: PROGRESSION_VERSION,
-      exportedAt: new Date().toISOString(),
-      data: {
-        sessions_history: history,
-        exercises_v1: exercises,
-        settings: settings,
-        current_session: session
-      }
-    }, null, 2);
-  }
-
-  // Fixed filename (not date-stamped) so that saving to the same iCloud Drive
-  // folder offers "Replace" instead of piling up one file per export. The
-  // export date lives inside the JSON (exportedAt) and in the Settings card.
-  function backupFilename(){
-    return 'sport-sauvegarde.json';
-  }
-
-  async function exportBackup(){
-    if(backupInProgress) return;      // guard against a double-tap / double-fire
-    backupInProgress = true;
-    try{
-      const json = buildBackupPayload();
-      const filename = backupFilename();
-      const canShareFiles = (() => {
+}
+
+/* ============ feuille : ajouter ============ */
+function ajouter(){
+  const type = page==="films" ? "films" : "series";
+  const nom = type==="films" ? "un film" : "une série";
+  if(!aCle()) return manuel(type);
+  feuille(`
+    <div class="poignee"></div>
+    <h2 style="font-size:21px;margin-bottom:13px">Ajouter ${nom}</h2>
+    <input id="q" placeholder="Titre à chercher" autocomplete="off">
+    <div id="res" style="margin-top:14px"></div>
+    <button class="btn ghost" style="width:100%;margin-top:14px" id="allerManuel">Saisir à la main</button>
+  `, el=>{
+    const q = el.querySelector("#q"), res = el.querySelector("#res");
+    q.focus();
+    let timer;
+    q.oninput = ()=>{
+      clearTimeout(timer);
+      const v = q.value.trim();
+      if(v.length<2){ res.innerHTML=""; return; }
+      res.innerHTML = '<div style="padding:14px;text-align:center"><span class="spin"></span></div>';
+      timer = setTimeout(async()=>{
         try{
-          const probe = new File([json], filename, { type:'application/json' });
-          return !!(navigator.canShare && navigator.canShare({ files:[probe] }));
-        }catch(e){ return false; }
-      })();
-
-      // If the native share sheet can take files, use it EXCLUSIVELY. Never
-      // fall through to the download path afterwards — doing so produced a
-      // second file (the previous bug). The download path is only for
-      // browsers that can't share files at all (e.g. desktop).
-      if(canShareFiles){
-        try{
-          const file = new File([json], filename, { type:'application/json' });
-          // Share ONLY the file — no `title`/`text`. On iOS, passing a title
-          // alongside a file makes "Save to Files" spit out an extra .txt
-          // containing that title next to the JSON. The file already carries
-          // its own name, so the title added nothing but that stray text file.
-          await navigator.share({ files:[file] });
-          localStorage.setItem('last_backup_at', String(Date.now()));
-          showToast('Sauvegarde exportée');
-          render();
-        }catch(e){
-          // AbortError = user dismissed the sheet. Anything else = share
-          // failed; tell the user rather than silently downloading a file.
-          if(!(e && e.name === 'AbortError')){
-            showToast("Partage annulé ou impossible");
-          }
-        }
-        return;
-      }
-
-      // Fallback for browsers without file sharing: a normal download.
-      const blob = new Blob([json], { type:'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(()=> URL.revokeObjectURL(url), 1000);
-      localStorage.setItem('last_backup_at', String(Date.now()));
-      showToast('Sauvegarde téléchargée');
-      render();
-    }finally{
-      backupInProgress = false;
-    }
-  }
-
-  async function importBackup(file){
-    let parsed;
-    try{
-      const text = await file.text();
-      parsed = JSON.parse(text);
-    }catch(e){
-      showToast('Fichier illisible — JSON invalide');
-      return;
-    }
-
-    const d = parsed && parsed.data;
-    if(!d || !Array.isArray(d.sessions_history) || !Array.isArray(d.exercises_v1)){
-      showToast("Ce fichier n'est pas une sauvegarde valide");
-      return;
-    }
-
-    const count = d.sessions_history.length;
-    const ok = confirm(
-      `Restaurer ${count} séance(s) ?\n\n` +
-      `Toutes les données actuelles de l'app (historique, niveaux, cibles, réglages) ` +
-      `seront définitivement remplacées.`
-    );
-    if(!ok) return;
-
-    history = d.sessions_history;
-    exercises = d.exercises_v1;
-    if(d.settings) settings = Object.assign({ rounds:4, restBetweenEx:75, restBetweenRounds:120 }, d.settings);
-
-    // The restored session only applies if it belongs to today; otherwise start fresh.
-    if(d.current_session && d.current_session.dateKey === todayKey() && Array.isArray(d.current_session.exercises)){
-      session = d.current_session;
-    } else {
-      session = newSession();
-    }
-
-    await saveHistory();
-    await saveExercises();
-    await saveSettings();
-    await saveCurrentSession();
-
-    showToast(`${count} séance(s) restaurée(s)`);
-    activeTab = 'historique';
-    render();
-  }
-
-  // ---------- Rest timer ----------
-  // Timestamp-based (not a simple decrementing counter): this lets the timer
-  // self-correct the instant the app comes back to the foreground, even if
-  // iOS paused JS execution while it was backgrounded. It cannot make sound
-  // play or the timer visibly tick while the screen is locked — no web API
-  // allows that — but it guarantees correctness and an immediate beep the
-  // moment you unlock/return, rather than a timer that's silently wrong.
-  const CIRC = 2 * Math.PI * 45;
-
-  function startRest(seconds, nextLabel, isEndOfRound){
-    if(seconds <= 0){
-      if(isEndOfRound) advanceRound();
-      return;
-    }
-    clearRestInterval();
-    restState = {
-      endTime: Date.now() + seconds*1000,
-      total: seconds,
-      next: nextLabel,
-      isEndOfRound,
-      beeped: new Set()
+          const r = await chercher(v, type);
+          if(!r.length){ res.innerHTML = '<p style="color:var(--brume);font-size:13.5px;padding:8px 0">Rien trouvé. Vérifie l\'orthographe ou saisis à la main.</p>'; return; }
+          res.innerHTML = r.map(x=>`<button data-add="${x.tmdbId}" style="display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:9px 0;border-bottom:1px solid var(--bord)">
+            <div class="poster" style="${x.poster?`background-image:url(${img(x.poster)})`:""};width:40px;flex-basis:40px;min-height:58px;font-size:13px">${x.poster?"":esc(init(x.titre))}</div>
+            <div style="flex:1;min-width:0"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.titre)}</div><div class="mono" style="font-size:11.5px;color:var(--brume)">${x.annee||"—"}</div></div>
+            <span style="color:var(--beurre);font-size:21px">+</span>
+          </button>`).join("");
+          res.querySelectorAll("[data-add]").forEach(b=>b.onclick=async()=>{
+            b.style.opacity=.4; b.disabled=true;
+            try{
+              const id = Number(b.dataset.add);
+              if(type==="series"){
+                if(D.series.some(s=>s.tmdbId===id)) throw new Error("Cette série est déjà dans ta liste.");
+                D.series.push(await importerSerie(id));
+              }else{
+                if(D.films.some(f=>f.tmdbId===id)) throw new Error("Ce film est déjà dans ta liste.");
+                D.films.push(await importerFilm(id));
+              }
+              sauver(); invaliderSuggestions(); fermer(); rendre(); toast("Ajouté");
+            }catch(e){ b.style.opacity=1; b.disabled=false; res.insertAdjacentHTML("afterbegin",`<p class="err" style="padding-bottom:8px">${esc(e.message)}</p>`); }
+          });
+        }catch(e){ res.innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+      }, 380);
     };
-    document.getElementById('restNext').textContent = 'Prochain : ' + nextLabel;
-    updateTimerUI();
-    document.getElementById('restOverlay').classList.add('show');
-    restState.interval = setInterval(tickRest, 250);
-  }
-
-  function tickRest(){
-    if(!restState) return;
-    const remaining = Math.max(0, Math.ceil((restState.endTime - Date.now()) / 1000));
-
-    if(remaining <= 3 && remaining >= 1 && !restState.beeped.has(remaining)){
-      restState.beeped.add(remaining);
-      tickBeep();
-    }
-    if(remaining <= 0){
-      if(!restState.beeped.has(0)){
-        restState.beeped.add(0);
-        finalBeep();
-      }
-      endRest();
-      return;
-    }
-    updateTimerUI(remaining);
-  }
-
-  function updateTimerUI(remainingOverride){
-    if(!restState) return;
-    const remaining = remainingOverride != null
-      ? remainingOverride
-      : Math.max(0, Math.ceil((restState.endTime - Date.now()) / 1000));
-    const m = Math.floor(remaining / 60);
-    const s = remaining % 60;
-    document.getElementById('timerNum').textContent = `${m}:${String(s).padStart(2,'0')}`;
-    const frac = Math.max(0, Math.min(1, remaining / restState.total));
-    document.getElementById('timerFill').style.strokeDashoffset = CIRC * (1 - frac);
-  }
-
-  function clearRestInterval(){
-    if(restState && restState.interval) clearInterval(restState.interval);
-  }
-
-  function endRest(){
-    clearRestInterval();
-    document.getElementById('restOverlay').classList.remove('show');
-    const wasEndOfRound = restState && restState.isEndOfRound;
-    restState = null;
-    if(wasEndOfRound) advanceRound();
-  }
-
-  document.getElementById('restSkip').onclick = endRest;
-  document.getElementById('restPlus').onclick = () => {
-    if(!restState) return;
-    restState.endTime += 15000;
-    restState.total += 15;
-    restState.beeped.clear();
-    updateTimerUI();
-  };
-  document.getElementById('restMinus').onclick = () => {
-    if(!restState) return;
-    restState.endTime = Math.max(Date.now() + 1000, restState.endTime - 15000);
-    restState.total = Math.max(1, restState.total - 15);
-    updateTimerUI();
-  };
-
-  // Catch-up the instant the app returns to the foreground: if the rest
-  // period fully elapsed while backgrounded/locked, this fires the beep
-  // and advances state immediately rather than leaving it silently stale.
-  document.addEventListener('visibilitychange', () => {
-    if(document.visibilityState === 'visible' && restState){
-      tickRest();
-    }
+    el.querySelector("#allerManuel").onclick = ()=>{ fermer(); manuel(type); };
   });
+}
 
-  // ---------- Init ----------
-  async function init(){
-    await loadAll();
-    render();
+function manuel(type){
+  const serie = type==="series";
+  feuille(`
+    <div class="poignee"></div>
+    <h2 style="font-size:21px;margin-bottom:5px">${serie?"Nouvelle série":"Nouveau film"}</h2>
+    <p style="font-size:13px;color:var(--brume);margin-bottom:14px">${aCle()?"Saisie manuelle.":"Sans clé TMDB, la saisie est manuelle. Tu peux en ajouter une dans Réglages."}</p>
+    <label class="eyebrow">Titre</label>
+    <input id="mt" placeholder="${serie?"Le Bureau des légendes":"Dune"}" style="margin:6px 0 12px">
+    <label class="eyebrow">Année</label>
+    <input id="ma" inputmode="numeric" placeholder="2015" style="margin:6px 0 12px">
+    ${serie?`<label class="eyebrow">Épisodes par saison</label>
+    <input id="ms" inputmode="numeric" placeholder="10, 10, 12" style="margin:6px 0 6px">
+    <p style="font-size:12.5px;color:var(--brume);margin-bottom:14px">Un nombre par saison, séparés par des virgules.</p>`
+    :`<label class="eyebrow">Durée en minutes</label>
+    <input id="md" inputmode="numeric" placeholder="155" style="margin:6px 0 14px">`}
+    <div id="merr" class="err" style="margin-bottom:10px"></div>
+    <button class="btn" style="width:100%" id="mok">Ajouter</button>
+  `, el=>{
+    el.querySelector("#mt").focus();
+    el.querySelector("#mok").onclick = ()=>{
+      const err = el.querySelector("#merr");
+      const titre = el.querySelector("#mt").value.trim();
+      const annee = el.querySelector("#ma").value.trim();
+      if(!titre){ err.textContent="Il faut un titre."; return; }
+      if(serie){
+        const nums = el.querySelector("#ms").value.split(",").map(x=>parseInt(x.trim(),10)).filter(n=>n>0);
+        if(!nums.length){ err.textContent="Indique au moins un nombre d'épisodes."; return; }
+        D.series.push({ id:uid(), tmdbId:null, titre, annee, poster:null,
+          saisons: nums.map((n,i)=>({ n:i+1, episodes:Array.from({length:n},(_,j)=>({n:j+1,titre:"",duree:null})) })),
+          vus:{}, ajoute:new Date().toISOString() });
+      }else{
+        D.films.push({ id:uid(), tmdbId:null, titre, annee, poster:null, duree:parseInt(el.querySelector("#md").value,10)||null, vuLe:null, ajoute:new Date().toISOString() });
+      }
+      sauver(); invaliderSuggestions(); fermer(); rendre(); toast("Ajouté");
+    };
+  });
+}
+
+/* ============ feuille générique ============ */
+function feuille(html, apres){
+  fermer();
+  const d = document.createElement("div");
+  d.className = "sheet";
+  d.innerHTML = `<div><button class="fermer-x" aria-label="Fermer">×</button>${html}</div>`;
+  d.onclick = e => { if(e.target===d) fermer(); };
+  d.querySelector(".fermer-x").onclick = fermer;
+  document.body.appendChild(d);
+  ouvert = d;
+  if(apres) apres(d);
+}
+function fermer(){ if(ouvert){ ouvert.remove(); ouvert=null; } }
+let tid;
+function toast(m){
+  document.querySelector(".toast")?.remove();
+  const t = document.createElement("div"); t.className="toast"; t.textContent=m;
+  document.body.appendChild(t); clearTimeout(tid); tid=setTimeout(()=>t.remove(),2000);
+}
+
+/* ============ événements ============ */
+document.addEventListener("click", e=>{
+  const c = s => e.target.closest(s);
+  let b;
+  if((b=c("[data-page]"))){ page=b.dataset.page; fermer(); rendre(); window.scrollTo(0,0); return; }
+  if((b=c("[data-ong]"))){ histOnglet=b.dataset.ong; rendre(); return; }
+  if((b=c("[data-hs]"))){
+    const id=b.dataset.hs;
+    histSerieOuv.has(id) ? histSerieOuv.delete(id) : histSerieOuv.add(id);
+    rendre(); return;
   }
-  init();
+  if((b=c("[data-hsa]"))){
+    const k=b.dataset.hsa;
+    histSaisonOuv.has(k) ? histSaisonOuv.delete(k) : histSaisonOuv.add(k);
+    rendre(); return;
+  }
+  if((b=c("[data-dec]"))){ decOnglet=b.dataset.dec; decQ=""; clearTimeout(decTimer); rendre(); return; }
+  if((b=c("[data-decf]"))){ decFiltre=b.dataset.decf; rendre(); return; }
+  if(c("[data-decretry]")){ delete decCache[decOnglet+":"+decFiltre]; chargerDecouv(); return; }
+  if((b=c("[data-decadd]"))){
+    const [type, idStr] = b.dataset.decadd.split(":"); const id = Number(idStr);
+    if(dansMaListe(id,type)) return;
+    // Le vrai critère : le bouton est-il dans une tuile ?
+    // - Oui (Découverte, fiche personne) : on marque la tuile "dedans" sans quitter la vue
+    // - Non (bouton "Ajouter à ma liste" pleine largeur dans une fiche descriptive) : fermer
+    const tuile = b.closest(".tuile");
+    b.innerHTML = '<span class="spin" style="width:13px;height:13px;border-width:2px;border-color:rgba(42,29,7,.3);border-top-color:#2A1D07"></span>';
+    b.disabled = true;
+    (async()=>{
+      try{
+        if(type==="series") D.series.push(await importerSerie(id));
+        else D.films.push(await importerFilm(id));
+        sauver();
+        invaliderSuggestions();
+        if(tuile){
+          tuile.classList.add("dedans");
+          b.remove();
+          const pq = tuile.querySelector(".pq"); if(pq) pq.textContent = "déjà dans ta liste";
+          toast(type==="series" ? "Série ajoutée" : "Film ajouté");
+        } else {
+          fermer(); rendre(); toast(type==="series" ? "Série ajoutée" : "Film ajouté");
+        }
+      }catch(err){ b.disabled=false; b.textContent="+"; toast(err.message); }
+    })();
+    return;
+  }
+  if((b=c("[data-vu]"))){
+    const s = D.series.find(x=>x.id===b.dataset.vu); const ep = suivant(s);
+    if(ep){ marquer(s, ep.saison, ep.n, true); rendre(); toast(fini(s)?"Série terminée":"S"+String(ep.saison).padStart(2,"0")+"E"+String(ep.n).padStart(2,"0")+" coché"); }
+    return;
+  }
+  // Actions rapides d'abord : elles vivent dans des tuiles/cartes qui portent data-ffiche.
+  // Sans cet ordre, taper la coche d'un film ouvrirait la fiche au lieu de marquer vu.
+  if((b=c("[data-filmvu]"))){ const f=D.films.find(x=>x.id===b.dataset.filmvu); f.vuLe=new Date().toISOString(); sauver(); fermer(); rendre(); toast("Vu — dans l'historique"); return; }
+  if((b=c("[data-masq]"))){
+    const [type, idStr] = b.dataset.masq.split(":");
+    D.masques[type].push(Number(idStr));
+    sauver();
+    // Cache Découverte inchangé : peindreDecouv reçoit les données brutes,
+    // le filtre "estMasque" s'applique aussi côté rendu. Ainsi la tuile disparaît
+    // sans qu'on ait à relancer un appel TMDB.
+    const tuile = b.closest(".tuile");
+    if(tuile){
+      tuile.style.transition = "opacity .18s, transform .18s";
+      tuile.style.opacity = "0";
+      tuile.style.transform = "scale(0.88)";
+      setTimeout(rendre, 180);
+    } else rendre();
+    return;
+  }
+  if((b=c("[data-filmrevu]"))){ const f=D.films.find(x=>x.id===b.dataset.filmrevu); f.vuLe=null; sauver(); fermer(); rendre(); toast("Remis à voir"); return; }
+  if((b=c("[data-filmsup]"))){ const f=D.films.find(x=>x.id===b.dataset.filmsup); if(confirm("Retirer « "+f.titre+" » ?")){ D.films=D.films.filter(x=>x.id!==f.id); sauver(); invaliderSuggestions(); fermer(); rendre(); toast("Film retiré"); } return; }
+  if((b=c("[data-supprimer]"))){
+    const s = D.series.find(x=>x.id===b.dataset.supprimer);
+    if(!s) return;
+    if(!confirm("Retirer « "+s.titre+" » et son historique ?")) return;
+    D.series = D.series.filter(x=>x.id!==s.id);
+    sauver(); invaliderSuggestions(); fermer(); rendre(); toast("Série retirée");
+    return;
+  }
+  // Puis navigation vers une fiche
+  if((b=c("[data-detail]"))){ detail(b.dataset.detail); return; }
+  if((b=c("[data-ffiche]"))){
+    const [type, id] = b.dataset.ffiche.split(":");
+    const item = (type==="series"?D.series:D.films).find(x=>x.id===id);
+    if(item) ficheDescription(type, item.tmdbId, id);
+    return;
+  }
+  if((b=c("[data-fdec]"))){
+    const [type, idStr] = b.dataset.fdec.split(":");
+    ficheDescription(type, Number(idStr));
+    return;
+  }
+  if((b=c("[data-personne]"))){
+    const [idStr, nomEnc] = b.dataset.personne.split(":");
+    fichePersonne(Number(idStr), decodeURIComponent(nomEnc||""));
+    return;
+  }
+  if((b=c("[data-htf]"))){ histFilmTri=b.dataset.htf; rendre(); return; }
+  if((b=c("[data-hts]"))){ histSerieTri=b.dataset.hts; rendre(); return; }
 
-})();
+  if(c("#fab")){ ajouter(); return; }
+
+  if(c("#saveCle")){ D.tmdb=$("#cleTmdb").value.trim(); sauver(); $("#cleEtat").textContent = aCle()?"Clé enregistrée.":"Aucune clé — mode saisie manuelle."; return; }
+  if((b=c("#testCle"))){
+    const et=$("#cleEtat"); D.tmdb=$("#cleTmdb").value.trim();
+    et.innerHTML='<span class="spin"></span>';
+    tmdb("/search/tv",{query:"test"}).then(()=>{ sauver(); et.textContent="La clé fonctionne. Enregistrée."; et.style.color="var(--beurre)"; })
+      .catch(err=>{ et.textContent=err.message; et.style.color="var(--rose)"; });
+    return;
+  }
+  if(c("#exp")){
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(D,null,2)],{type:"application/json"}));
+    a.download="suivi-"+new Date().toISOString().slice(0,10)+".json"; a.click(); URL.revokeObjectURL(a.href);
+    return;
+  }
+  if(c("#imp")){
+    const i=document.createElement("input"); i.type="file"; i.accept=".json";
+    i.onchange=()=>{ const f=i.files[0]; if(!f) return; const r=new FileReader();
+      r.onload=()=>{ try{ const d=JSON.parse(r.result);
+          if(!Array.isArray(d.series)||!Array.isArray(d.films)) throw new Error("Ce fichier n'a pas le bon format.");
+          D=Object.assign({series:[],films:[],tmdb:D.tmdb,masques:{series:[],films:[]}}, d); D.masques=D.masques||{series:[],films:[]}; sauver(); invaliderSuggestions(); rendre(); toast("Données importées");
+        }catch(e){ alert(e.message); } };
+      r.readAsText(f); };
+    i.click(); return;
+  }
+  if(c("#reinitMasques")){
+    D.masques = { series: [], films: [] };
+    sauver(); invaliderSuggestions(); rendre();
+    toast("Recommandations rétablies");
+    return;
+  }
+  if(c("#raz")){
+    if(confirm("Effacer séries, films et historique ? C'est définitif.")){
+      D={series:[],films:[],tmdb:D.tmdb,masques:{series:[],films:[]}}; sauver(); invaliderSuggestions(); rendre(); toast("Données effacées");
+    }
+    return;
+  }
+});
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") fermer(); });
+
+charger(); rendre();
 </script>
 </body>
 </html>
