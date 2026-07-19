@@ -1793,7 +1793,11 @@
       if(canShareFiles){
         try{
           const file = new File([json], filename, { type:'application/json' });
-          await navigator.share({ files:[file], title:'Sauvegarde Sport' });
+          // Share ONLY the file — no `title`/`text`. On iOS, passing a title
+          // alongside a file makes "Save to Files" spit out an extra .txt
+          // containing that title next to the JSON. The file already carries
+          // its own name, so the title added nothing but that stray text file.
+          await navigator.share({ files:[file] });
           localStorage.setItem('last_backup_at', String(Date.now()));
           showToast('Sauvegarde exportée');
           render();
